@@ -120,6 +120,25 @@
   }
   input[type="text"]:focus, input[type="number"]:focus{ border-color: var(--blue); }
 
+  .exercise-wrap{ position:relative; }
+  .exercise-dropdown{
+    position:absolute; top:calc(100% + 6px); left:0; right:0;
+    background:#101116; border:1px solid var(--card-border); border-radius:10px;
+    max-height:212px; overflow-y:auto; z-index:30; display:none;
+    box-shadow:0 12px 28px rgba(0,0,0,0.45);
+  }
+  .exercise-dropdown.open{ display:block; }
+  .exercise-dropdown .opt{
+    padding:10px 12px; font-size:13px; color:var(--chalk); cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+  }
+  .exercise-dropdown .opt:hover{ background: rgba(47,111,167,0.15); }
+  .exercise-dropdown .opt .tag{
+    font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--chalk-dim);
+    border:1px solid var(--card-border); border-radius:4px; padding:1px 5px; flex-shrink:0;
+  }
+  .exercise-dropdown .empty{ padding:10px 12px; font-size:13px; color:var(--chalk-dim); }
+
   .segmented{ display:flex; gap:8px; }
   .segmented button{
     flex:1;
@@ -220,11 +239,6 @@
         </div>
       </div>
 
-      <div class="field">
-        <label for="exercise">Exercise</label>
-        <input type="text" id="exercise" value="Back Squat">
-      </div>
-
       <div class="row">
         <div class="field">
           <label>Unit</label>
@@ -239,6 +253,14 @@
             <button data-val="lower" class="active">Lower body</button>
             <button data-val="upper">Upper body</button>
           </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="exercise">Exercise</label>
+        <div class="exercise-wrap">
+          <input type="text" id="exercise" value="Back Squat" autocomplete="off">
+          <div class="exercise-dropdown" id="exerciseDropdown"></div>
         </div>
       </div>
 
@@ -326,6 +348,7 @@
 
   const els = {
     exercise: document.getElementById('exercise'),
+    exerciseDropdown: document.getElementById('exerciseDropdown'),
     lastWeight: document.getElementById('lastWeight'),
     barWeight: document.getElementById('barWeight'),
     repMin: document.getElementById('repMin'),
@@ -347,6 +370,17 @@
     barReadout: document.getElementById('barReadout'),
     barSvg: document.getElementById('barSvg'),
     plateKey: document.getElementById('plateKey'),
+  };
+
+  const EXERCISES = {
+    barbell: {
+      lower: ['Back Squat', 'Front Squat', 'Deadlift', 'Romanian Deadlift', 'Bulgarian Split Squat', 'Hip Thrust', 'Good Morning', 'Barbell Lunge', 'Box Squat'],
+      upper: ['Bench Press', 'Incline Bench Press', 'Overhead Press', 'Bent-Over Row', 'Close-Grip Bench Press', 'Barbell Curl', 'Skull Crusher', 'Upright Row', 'Push Press']
+    },
+    dumbbell: {
+      lower: ['Goblet Squat', 'Dumbbell Romanian Deadlift', 'Dumbbell Lunge', 'Dumbbell Step-Up', 'Dumbbell Bulgarian Split Squat', 'Dumbbell Hip Thrust', 'Dumbbell Calf Raise'],
+      upper: ['Dumbbell Bench Press', 'Dumbbell Incline Press', 'Dumbbell Shoulder Press', 'Dumbbell Row', 'Dumbbell Curl', 'Dumbbell Lateral Raise', 'Dumbbell Tricep Extension', 'Dumbbell Fly']
+    }
   };
 
   const PLATES = {
@@ -547,6 +581,46 @@
     `;
     els.barSvg.innerHTML = svg;
   }
+
+  function renderExerciseDropdown(filterText){
+    const list = EXERCISES[state.equipment][state.movement];
+    const q = (filterText || '').toLowerCase();
+    const filtered = q ? list.filter(name => name.toLowerCase().includes(q)) : list;
+    const tag = state.equipment === 'dumbbell' ? 'DB' : 'BB';
+    if (filtered.length === 0){
+      els.exerciseDropdown.innerHTML = `<div class="empty">No matches</div>`;
+      return;
+    }
+    els.exerciseDropdown.innerHTML = filtered.map(name =>
+      `<div class="opt" data-name="${name}"><span class="tag">${tag}</span>${name}</div>`
+    ).join('');
+  }
+
+  function openExerciseDropdown(){
+    renderExerciseDropdown(els.exercise.value);
+    els.exerciseDropdown.classList.add('open');
+  }
+  function closeExerciseDropdown(){
+    els.exerciseDropdown.classList.remove('open');
+  }
+
+  els.exercise.addEventListener('focus', openExerciseDropdown);
+  els.exercise.addEventListener('click', openExerciseDropdown);
+  els.exercise.addEventListener('input', () => {
+    renderExerciseDropdown(els.exercise.value);
+    els.exerciseDropdown.classList.add('open');
+  });
+  els.exerciseDropdown.addEventListener('mousedown', e => {
+    const opt = e.target.closest('[data-name]');
+    if (!opt) return;
+    els.exercise.value = opt.dataset.name;
+    closeExerciseDropdown();
+  });
+  document.addEventListener('click', e => {
+    if (!els.exercise.contains(e.target) && !els.exerciseDropdown.contains(e.target)){
+      closeExerciseDropdown();
+    }
+  });
 
   els.calcBtn.addEventListener('click', calculate);
   renderPlateKey();
