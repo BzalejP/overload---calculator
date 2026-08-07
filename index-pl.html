@@ -120,6 +120,25 @@
   }
   input[type="text"]:focus, input[type="number"]:focus{ border-color: var(--blue); }
 
+  .exercise-wrap{ position:relative; }
+  .exercise-dropdown{
+    position:absolute; top:calc(100% + 6px); left:0; right:0;
+    background:#101116; border:1px solid var(--card-border); border-radius:10px;
+    max-height:212px; overflow-y:auto; z-index:30; display:none;
+    box-shadow:0 12px 28px rgba(0,0,0,0.45);
+  }
+  .exercise-dropdown.open{ display:block; }
+  .exercise-dropdown .opt{
+    padding:10px 12px; font-size:13px; color:var(--chalk); cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+  }
+  .exercise-dropdown .opt:hover{ background: rgba(47,111,167,0.15); }
+  .exercise-dropdown .opt .tag{
+    font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--chalk-dim);
+    border:1px solid var(--card-border); border-radius:4px; padding:1px 5px; flex-shrink:0;
+  }
+  .exercise-dropdown .empty{ padding:10px 12px; font-size:13px; color:var(--chalk-dim); }
+
   .segmented{ display:flex; gap:8px; }
   .segmented button{
     flex:1;
@@ -220,11 +239,6 @@
         </div>
       </div>
 
-      <div class="field">
-        <label for="exercise">Ćwiczenie</label>
-        <input type="text" id="exercise" value="Przysiad ze sztangą">
-      </div>
-
       <div class="row">
         <div class="field">
           <label>Jednostka</label>
@@ -239,6 +253,14 @@
             <button data-val="lower" class="active">Dół ciała</button>
             <button data-val="upper">Góra ciała</button>
           </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="exercise">Ćwiczenie</label>
+        <div class="exercise-wrap">
+          <input type="text" id="exercise" value="Przysiad ze sztangą" autocomplete="off">
+          <div class="exercise-dropdown" id="exerciseDropdown"></div>
         </div>
       </div>
 
@@ -326,6 +348,7 @@
 
   const els = {
     exercise: document.getElementById('exercise'),
+    exerciseDropdown: document.getElementById('exerciseDropdown'),
     lastWeight: document.getElementById('lastWeight'),
     barWeight: document.getElementById('barWeight'),
     repMin: document.getElementById('repMin'),
@@ -347,6 +370,17 @@
     barReadout: document.getElementById('barReadout'),
     barSvg: document.getElementById('barSvg'),
     plateKey: document.getElementById('plateKey'),
+  };
+
+  const EXERCISES = {
+    barbell: {
+      lower: ['Przysiad ze sztangą', 'Przysiad przedni', 'Martwy ciąg', 'Rumuński martwy ciąg', 'Przysiad bułgarski', 'Hip thrust ze sztangą', 'Good morning', 'Wykrok ze sztangą', 'Przysiad na skrzyni'],
+      upper: ['Wyciskanie sztangi na ławce', 'Wyciskanie na ławce skos dodatni', 'Wyciskanie żołnierskie', 'Wiosłowanie sztangą w opadzie', 'Wyciskanie wąskim chwytem', 'Uginanie ramion ze sztangą', 'Francuskie wyciskanie', 'Wiosłowanie sztangą wzniosy', 'Push press']
+    },
+    dumbbell: {
+      lower: ['Przysiad z hantlą (goblet)', 'Rumuński martwy ciąg z hantlami', 'Wykrok z hantlami', 'Step-up z hantlami', 'Przysiad bułgarski z hantlami', 'Hip thrust z hantlą', 'Wspięcia na palce z hantlami'],
+      upper: ['Wyciskanie hantli na ławce', 'Wyciskanie hantli skos dodatni', 'Wyciskanie hantli nad głowę', 'Wiosłowanie hantlą', 'Uginanie ramion z hantlami', 'Unoszenie hantli bokiem', 'Prostowanie ramion z hantlą', 'Rozpiętki z hantlami']
+    }
   };
 
   const PLATES = {
@@ -547,6 +581,46 @@
     `;
     els.barSvg.innerHTML = svg;
   }
+
+  function renderExerciseDropdown(filterText){
+    const list = EXERCISES[state.equipment][state.movement];
+    const q = (filterText || '').toLowerCase();
+    const filtered = q ? list.filter(name => name.toLowerCase().includes(q)) : list;
+    const tag = state.equipment === 'dumbbell' ? 'DB' : 'BB';
+    if (filtered.length === 0){
+      els.exerciseDropdown.innerHTML = `<div class="empty">Brak wyników</div>`;
+      return;
+    }
+    els.exerciseDropdown.innerHTML = filtered.map(name =>
+      `<div class="opt" data-name="${name}"><span class="tag">${tag}</span>${name}</div>`
+    ).join('');
+  }
+
+  function openExerciseDropdown(){
+    renderExerciseDropdown(els.exercise.value);
+    els.exerciseDropdown.classList.add('open');
+  }
+  function closeExerciseDropdown(){
+    els.exerciseDropdown.classList.remove('open');
+  }
+
+  els.exercise.addEventListener('focus', openExerciseDropdown);
+  els.exercise.addEventListener('click', openExerciseDropdown);
+  els.exercise.addEventListener('input', () => {
+    renderExerciseDropdown(els.exercise.value);
+    els.exerciseDropdown.classList.add('open');
+  });
+  els.exerciseDropdown.addEventListener('mousedown', e => {
+    const opt = e.target.closest('[data-name]');
+    if (!opt) return;
+    els.exercise.value = opt.dataset.name;
+    closeExerciseDropdown();
+  });
+  document.addEventListener('click', e => {
+    if (!els.exercise.contains(e.target) && !els.exerciseDropdown.contains(e.target)){
+      closeExerciseDropdown();
+    }
+  });
 
   els.calcBtn.addEventListener('click', calculate);
   renderPlateKey();
