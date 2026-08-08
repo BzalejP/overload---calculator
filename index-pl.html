@@ -6,6 +6,9 @@
 <title>Overload — Kalkulator progresji obciążenia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --bg: #121218;
@@ -139,6 +142,16 @@
   }
   .exercise-dropdown .empty{ padding:10px 12px; font-size:13px; color:var(--chalk-dim); }
 
+  .rep-lock-note{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-top:-6px; margin-bottom:16px; font-size:11.5px; color:var(--chalk-dim);
+  }
+  .rep-lock-note button{
+    background:none; border:none; color: var(--blue); font-size:11.5px; cursor:pointer;
+    text-decoration:underline; padding:0; flex-shrink:0;
+  }
+  input[readonly]{ opacity:0.6; cursor:default; }
+
   .segmented{ display:flex; gap:8px; }
   .segmented button{
     flex:1;
@@ -208,10 +221,42 @@
   @media (prefers-reduced-motion: reduce){
     * { animation: none !important; transition: none !important; }
   }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width: 1040px; margin: 0 auto 18px;
+  }
+  .auth-btn{
+    display:flex; align-items:center; gap:8px;
+    background:#101116; border:1px solid var(--card-border); color:var(--chalk);
+    font-family:'Inter', sans-serif; font-size:13px; font-weight:600;
+    padding: 8px 14px; border-radius: 999px; cursor:pointer; transition: border-color 0.15s ease;
+  }
+  .auth-btn:hover{ border-color: var(--blue); }
+  .auth-btn.small{ padding: 5px 10px; font-size:12px; }
+  .user-chip{ display:flex; align-items:center; gap:8px; }
+  .user-chip img{ width:26px; height:26px; border-radius:50%; }
+  .user-chip span{ font-size:13px; color:var(--chalk-dim); }
+  .lang-flags{ display:flex; gap:6px; }
+  .flag-btn{
+    font-size:20px; line-height:1; padding:6px 8px; border-radius:8px;
+    border:1px solid transparent; cursor:pointer; text-decoration:none; display:inline-block;
+    background:transparent; opacity:0.55; transition: all 0.15s ease;
+  }
+  .flag-btn:hover{ opacity:0.85; }
+  .flag-btn.active{ opacity:1; border-color: var(--card-border); background:#101116; cursor:default; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="topbar">
+    <div id="authArea"></div>
+    <div class="lang-flags">
+      <a class="flag-btn" href="index.html" title="English">🇬🇧</a>
+      <span class="flag-btn active" title="Polski">🇵🇱</span>
+    </div>
+  </div>
+
   <header>
     <div class="eyebrow">Metoda podwójnej progresji</div>
     <h1>OVERLOAD</h1>
@@ -285,6 +330,10 @@
           <input type="number" id="repMax" value="12" min="1">
         </div>
       </div>
+      <div class="rep-lock-note" id="repLockNote" style="display:none;">
+        <span id="repLockText"></span>
+        <button type="button" id="repUnlockBtn">Edytuj ręcznie</button>
+      </div>
 
       <div class="row">
         <div class="field">
@@ -343,6 +392,103 @@
 </div>
 
 <script>
+// =====================================================================
+// KONFIGURACJA FIREBASE — zastąp poniższe wartości danymi z własnego projektu.
+// 1. Wejdź na https://console.firebase.google.com i utwórz darmowy projekt.
+// 2. Build → Authentication → Get started → Sign-in method → włącz "Google".
+// 3. Build → Firestore Database → Create database (tryb produkcyjny).
+// 4. Ustawienia projektu (ikona koła zębatego) → General → sekcja "Your apps"
+//    → dodaj aplikację webową → skopiuj obiekt firebaseConfig → wklej poniżej.
+// 5. W Authentication → Settings → Authorized domains → dodaj
+//    bzalejp.github.io (bez tego logowanie przez GitHub Pages nie zadziała).
+// 6. W Firestore → Rules wklej poniższe i kliknij Publish:
+//      rules_version = '2';
+//      service cloud.firestore {
+//        match /databases/{database}/documents {
+//          match /users/{uid}/{document=**} {
+//            allow read, write: if request.auth != null && request.auth.uid == uid;
+//          }
+//        }
+//      }
+// =====================================================================
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null;
+
+function renderAuthUI(user){
+  const area = document.getElementById('authArea');
+  if (user){
+    area.innerHTML = `
+      <div class="user-chip">
+        <img src="${user.photoURL || ''}" alt="">
+        <span>${(user.displayName || 'Konto').split(' ')[0]}</span>
+        <button id="signOutBtn" class="auth-btn small">Wyloguj</button>
+      </div>`;
+    document.getElementById('signOutBtn').addEventListener('click', () => auth.signOut());
+  } else {
+    area.innerHTML = `<button id="loginBtn" class="auth-btn">🔐 Zaloguj się przez Google</button>`;
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+        .catch(err => console.error('Logowanie nieudane', err));
+    });
+  }
+}
+
+function exerciseKey(name){
+  return name.trim().toLowerCase().replace(/[^a-z0-9ąćęłńóśźż]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+async function saveExerciseEntry(){
+  if (!currentUser) return;
+  const name = document.getElementById('exercise').value.trim();
+  const key = exerciseKey(name);
+  if (!key) return;
+  try {
+    await db.collection('users').doc(currentUser.uid).collection('exercises').doc(key).set({
+      name,
+      equipment: (window.__overloadState || {}).equipment || 'barbell',
+      unit: (window.__overloadState || {}).unit || 'kg',
+      weight: parseFloat(document.getElementById('lastWeight').value) || 0,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) { console.error('Zapis nieudany', err); }
+}
+
+async function loadExerciseEntry(){
+  if (!currentUser) return;
+  const name = document.getElementById('exercise').value.trim();
+  const key = exerciseKey(name);
+  if (!key) return;
+  try {
+    const doc = await db.collection('users').doc(currentUser.uid).collection('exercises').doc(key).get();
+    if (doc.exists){
+      const data = doc.data();
+      if (typeof data.weight === 'number'){
+        document.getElementById('lastWeight').value = data.weight;
+      }
+      if (data.unit && window.__overloadSetUnit) window.__overloadSetUnit(data.unit);
+      if (data.equipment && window.__overloadSetEquipment) window.__overloadSetEquipment(data.equipment);
+    }
+  } catch (err) { console.error('Odczyt nieudany', err); }
+}
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  renderAuthUI(user);
+  if (user) loadExerciseEntry();
+});
+renderAuthUI(null);
+</script>
+<script>
 (function(){
   const state = { unit: 'kg', movement: 'lower', effort: 'moderate', equipment: 'barbell' };
 
@@ -353,6 +499,9 @@
     barWeight: document.getElementById('barWeight'),
     repMin: document.getElementById('repMin'),
     repMax: document.getElementById('repMax'),
+    repLockNote: document.getElementById('repLockNote'),
+    repLockText: document.getElementById('repLockText'),
+    repUnlockBtn: document.getElementById('repUnlockBtn'),
     achieved: document.getElementById('achieved'),
     increment: document.getElementById('increment'),
     unitSeg: document.getElementById('unitSeg'),
@@ -374,14 +523,52 @@
 
   const EXERCISES = {
     barbell: {
-      lower: ['Przysiad ze sztangą', 'Przysiad przedni', 'Martwy ciąg', 'Rumuński martwy ciąg', 'Przysiad bułgarski', 'Hip thrust ze sztangą', 'Good morning', 'Wykrok ze sztangą', 'Przysiad na skrzyni'],
-      upper: ['Wyciskanie sztangi na ławce', 'Wyciskanie na ławce skos dodatni', 'Wyciskanie żołnierskie', 'Wiosłowanie sztangą w opadzie', 'Wyciskanie wąskim chwytem', 'Uginanie ramion ze sztangą', 'Francuskie wyciskanie', 'Wiosłowanie sztangą wzniosy', 'Push press']
+      lower: [
+        { name: 'Przysiad ze sztangą', type: 'compound' },
+        { name: 'Przysiad przedni', type: 'compound' },
+        { name: 'Martwy ciąg', type: 'compound' },
+        { name: 'Rumuński martwy ciąg', type: 'compound' },
+        { name: 'Przysiad bułgarski', type: 'compound' },
+        { name: 'Hip thrust ze sztangą', type: 'compound' },
+        { name: 'Good morning', type: 'compound' },
+        { name: 'Wykrok ze sztangą', type: 'compound' },
+        { name: 'Przysiad na skrzyni', type: 'compound' }
+      ],
+      upper: [
+        { name: 'Wyciskanie sztangi na ławce', type: 'compound' },
+        { name: 'Wyciskanie na ławce skos dodatni', type: 'compound' },
+        { name: 'Wyciskanie żołnierskie', type: 'compound' },
+        { name: 'Wiosłowanie sztangą w opadzie', type: 'compound' },
+        { name: 'Wyciskanie wąskim chwytem', type: 'compound' },
+        { name: 'Push press', type: 'compound' },
+        { name: 'Uginanie ramion ze sztangą', type: 'isolation' },
+        { name: 'Francuskie wyciskanie', type: 'isolation' },
+        { name: 'Wiosłowanie sztangą wzniosy', type: 'isolation' }
+      ]
     },
     dumbbell: {
-      lower: ['Przysiad z hantlą (goblet)', 'Rumuński martwy ciąg z hantlami', 'Wykrok z hantlami', 'Step-up z hantlami', 'Przysiad bułgarski z hantlami', 'Hip thrust z hantlą', 'Wspięcia na palce z hantlami'],
-      upper: ['Wyciskanie hantli na ławce', 'Wyciskanie hantli skos dodatni', 'Wyciskanie hantli nad głowę', 'Wiosłowanie hantlą', 'Uginanie ramion z hantlami', 'Unoszenie hantli bokiem', 'Prostowanie ramion z hantlą', 'Rozpiętki z hantlami']
+      lower: [
+        { name: 'Przysiad z hantlą (goblet)', type: 'compound' },
+        { name: 'Rumuński martwy ciąg z hantlami', type: 'compound' },
+        { name: 'Wykrok z hantlami', type: 'compound' },
+        { name: 'Step-up z hantlami', type: 'compound' },
+        { name: 'Przysiad bułgarski z hantlami', type: 'compound' },
+        { name: 'Hip thrust z hantlą', type: 'compound' },
+        { name: 'Wspięcia na palce z hantlami', type: 'isolation' }
+      ],
+      upper: [
+        { name: 'Wyciskanie hantli na ławce', type: 'compound' },
+        { name: 'Wyciskanie hantli skos dodatni', type: 'compound' },
+        { name: 'Wyciskanie hantli nad głowę', type: 'compound' },
+        { name: 'Wiosłowanie hantlą', type: 'compound' },
+        { name: 'Uginanie ramion z hantlami', type: 'isolation' },
+        { name: 'Unoszenie hantli bokiem', type: 'isolation' },
+        { name: 'Prostowanie ramion z hantlą', type: 'isolation' },
+        { name: 'Rozpiętki z hantlami', type: 'isolation' }
+      ]
     }
   };
+  const REP_RANGE = { compound: [4, 6], isolation: [8, 12] };
 
   const PLATES = {
     kg: [
@@ -421,6 +608,16 @@
       btn.classList.toggle('active', btn.dataset.val === state[key]);
     });
   }
+
+  window.__overloadState = state;
+  window.__overloadSetUnit = (unit) => {
+    const btn = els.unitSeg.querySelector(`[data-val="${unit}"]`);
+    if (btn) btn.click();
+  };
+  window.__overloadSetEquipment = (equipment) => {
+    const btn = els.equipSeg.querySelector(`[data-val="${equipment}"]`);
+    if (btn) btn.click();
+  };
 
   els.unitSeg.addEventListener('click', e => {
     const btn = e.target.closest('button'); if(!btn) return;
@@ -585,14 +782,14 @@
   function renderExerciseDropdown(filterText){
     const list = EXERCISES[state.equipment][state.movement];
     const q = (filterText || '').toLowerCase();
-    const filtered = q ? list.filter(name => name.toLowerCase().includes(q)) : list;
-    const tag = state.equipment === 'dumbbell' ? 'DB' : 'BB';
+    const filtered = q ? list.filter(ex => ex.name.toLowerCase().includes(q)) : list;
+    const equipTag = state.equipment === 'dumbbell' ? 'DB' : 'BB';
     if (filtered.length === 0){
       els.exerciseDropdown.innerHTML = `<div class="empty">Brak wyników</div>`;
       return;
     }
-    els.exerciseDropdown.innerHTML = filtered.map(name =>
-      `<div class="opt" data-name="${name}"><span class="tag">${tag}</span>${name}</div>`
+    els.exerciseDropdown.innerHTML = filtered.map(ex =>
+      `<div class="opt" data-name="${ex.name}" data-type="${ex.type}"><span class="tag">${equipTag}</span>${ex.name}</div>`
     ).join('');
   }
 
@@ -603,6 +800,25 @@
   function closeExerciseDropdown(){
     els.exerciseDropdown.classList.remove('open');
   }
+
+  function lockRepRange(type){
+    const range = REP_RANGE[type];
+    if (!range) return;
+    els.repMin.value = range[0];
+    els.repMax.value = range[1];
+    els.repMin.readOnly = true;
+    els.repMax.readOnly = true;
+    els.repLockText.textContent = type === 'compound'
+      ? `Zablokowano na ${range[0]}–${range[1]} powtórzeń — ćwiczenie wielostawowe`
+      : `Zablokowano na ${range[0]}–${range[1]} powtórzeń — ćwiczenie izolowane`;
+    els.repLockNote.style.display = 'flex';
+  }
+  function unlockRepRange(){
+    els.repMin.readOnly = false;
+    els.repMax.readOnly = false;
+    els.repLockNote.style.display = 'none';
+  }
+  els.repUnlockBtn.addEventListener('click', unlockRepRange);
 
   els.exercise.addEventListener('focus', openExerciseDropdown);
   els.exercise.addEventListener('click', openExerciseDropdown);
@@ -615,6 +831,8 @@
     if (!opt) return;
     els.exercise.value = opt.dataset.name;
     closeExerciseDropdown();
+    lockRepRange(opt.dataset.type);
+    if (typeof loadExerciseEntry === 'function') loadExerciseEntry();
   });
   document.addEventListener('click', e => {
     if (!els.exercise.contains(e.target) && !els.exerciseDropdown.contains(e.target)){
@@ -622,7 +840,10 @@
     }
   });
 
-  els.calcBtn.addEventListener('click', calculate);
+  els.calcBtn.addEventListener('click', () => {
+    calculate();
+    if (typeof saveExerciseEntry === 'function') saveExerciseEntry();
+  });
   renderPlateKey();
   drawBar([], 'Wprowadź dane ostatniego treningu, aby załadować sztangę');
 })();
