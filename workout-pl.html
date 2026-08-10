@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Overload — Body Weight Tracker</title>
+<title>Overload — Dziennik Treningów</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -272,6 +272,71 @@
     padding:0 4px; line-height:1; transition: color 0.15s ease;
   }
   .entry-row .del:hover{ color: var(--red); }
+
+  .ghost-btn{
+    width:100%; background:none; border:1px dashed var(--card-border); color: var(--chalk-dim);
+    font-family:'Inter', sans-serif; font-size:13px; font-weight:600;
+    padding:11px; border-radius:10px; cursor:pointer; transition: all 0.15s ease;
+  }
+  .ghost-btn:hover{ border-color: var(--blue); color: var(--chalk); }
+
+  .exercise-block{
+    background:#101116; border:1px solid var(--card-border); border-radius:12px;
+    padding:14px; margin-bottom:12px;
+  }
+  .exercise-block-head{ display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+  .exercise-block-head input{ flex:1; }
+  .remove-ex{
+    background:none; border:none; color:var(--chalk-dim); cursor:pointer; font-size:16px;
+    padding:4px 6px; line-height:1; flex-shrink:0; transition: color 0.15s ease;
+  }
+  .remove-ex:hover{ color: var(--red); }
+
+  .set-row{
+    display:grid; grid-template-columns: 44px 1fr 1fr 30px;
+    gap:8px; align-items:center; margin-bottom:6px;
+  }
+  .set-row.header{
+    font-size:11px; color: var(--chalk-dim); text-transform:uppercase; letter-spacing:0.04em;
+    margin-bottom:8px;
+  }
+  .set-row .set-num{
+    font-family:'JetBrains Mono', monospace; color: var(--chalk-dim); font-size:13px; text-align:center;
+  }
+  .set-row input{ padding:8px 10px; font-size:13px; }
+  .remove-set{
+    background:none; border:none; color:var(--chalk-dim); cursor:pointer; font-size:14px;
+    padding:0; line-height:1; transition: color 0.15s ease;
+  }
+  .remove-set:hover{ color: var(--red); }
+  .add-set-btn{
+    background:none; border:none; color: var(--blue); font-size:12.5px; font-weight:600;
+    cursor:pointer; padding:4px 0; margin-top:2px;
+  }
+
+  .workout-history{ display:flex; flex-direction:column; gap:12px; }
+  .workout-entry{
+    background:#101116; border:1px solid var(--card-border); border-radius:12px; padding:14px;
+  }
+  .workout-entry-head{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--card-border);
+  }
+  .workout-entry-head .date{
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:14px; color: var(--chalk);
+  }
+  .workout-entry-head .del{
+    background:none; border:none; color:var(--chalk-dim); cursor:pointer; font-size:15px;
+    padding:0 4px; transition: color 0.15s ease;
+  }
+  .workout-entry-head .del:hover{ color: var(--red); }
+  .ex-line{ font-size:13px; color: var(--chalk-dim); margin-bottom:6px; line-height:1.5; }
+  .ex-line b{ color: var(--chalk); }
+  .ex-line .set-chip{
+    font-family:'JetBrains Mono', monospace; font-size:12px; color: var(--chalk-dim);
+    background:#181920; border:1px solid var(--card-border); border-radius:6px;
+    padding:1px 6px; margin:2px 3px 0 0; display:inline-block;
+  }
   .page-nav a{
     font-family:'Inter', sans-serif; font-size:13px; font-weight:600;
     color: var(--chalk-dim); text-decoration:none;
@@ -290,68 +355,58 @@
     <div class="topbar-left">
       <div id="authArea"></div>
       <div class="page-nav">
-        <a href="index.html">Calculator</a>
-        <a href="weight.html" class="active">Body Weight</a>
-        <a href="workout.html">Workout Log</a>
+        <a href="index-pl.html">Kalkulator</a>
+        <a href="weight-pl.html">Waga Ciała</a>
+        <a href="workout-pl.html" class="active">Dziennik Treningów</a>
       </div>
     </div>
     <div class="lang-flags">
-      <span class="flag-btn active" title="English"><img src="https://flagcdn.com/24x18/gb.png" srcset="https://flagcdn.com/48x36/gb.png 2x" alt="English"></span>
-      <a class="flag-btn" href="weight-pl.html" title="Polski"><img src="https://flagcdn.com/24x18/pl.png" srcset="https://flagcdn.com/48x36/pl.png 2x" alt="Polski"></a>
+      <a class="flag-btn" href="workout.html" title="English"><img src="https://flagcdn.com/24x18/gb.png" srcset="https://flagcdn.com/48x36/gb.png 2x" alt="English"></a>
+      <span class="flag-btn active" title="Polski"><img src="https://flagcdn.com/24x18/pl.png" srcset="https://flagcdn.com/48x36/pl.png 2x" alt="Polski"></span>
     </div>
   </div>
 
   <header>
-    <div class="eyebrow">Track Your Progress</div>
-    <h1>BODY WEIGHT</h1>
-    <p class="sub">Log your weight after every check-in and watch the trend, not just the number.</p>
+    <div class="eyebrow">Każda Seria, Każdy Trening</div>
+    <h1>DZIENNIK TRENINGÓW</h1>
+    <p class="sub">Zapisuj każde ćwiczenie, serię, powtórzenia i ciężar — a potem przejrzyj swoje ostatnie treningi.</p>
   </header>
 
   <div id="signedOutNotice" class="card" style="display:none; text-align:center; margin-bottom:22px;">
-    <p style="color:var(--chalk-dim); font-size:14px; margin:0;">Sign in with Google (top left) to start logging your weight — your history is saved to your account and synced across devices.</p>
+    <p style="color:var(--chalk-dim); font-size:14px; margin:0;">Zaloguj się przez Google (lewy górny róg), aby zacząć zapisywać treningi — Twoja historia jest zapisywana na koncie i synchronizowana między urządzeniami.</p>
   </div>
 
-  <div id="weightApp" style="display:none;">
-    <div class="chart-card card">
-      <div class="chart-head">
-        <div>
-          <div class="chart-latest" id="chartLatest">—</div>
-          <div class="chart-latest-label" id="chartLatestLabel">No entries yet</div>
-        </div>
-        <div class="chart-delta" id="chartDelta"></div>
-      </div>
-      <svg id="weightChart" viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
+  <div id="workoutApp" style="display:none;">
+    <div class="card" style="margin-bottom:22px;">
+      <h2>ZAPISZ TRENING</h2>
 
-    <div class="grid">
-      <div class="card">
-        <h2>LOG TODAY</h2>
-        <div class="row">
-          <div class="field">
-            <label for="wDate">Date</label>
-            <input type="date" id="wDate">
-          </div>
-          <div class="field">
-            <label>Unit</label>
-            <div class="segmented" id="wUnitSeg">
-              <button data-val="kg" class="active">KG</button>
-              <button data-val="lb">LB</button>
-            </div>
-          </div>
+      <div class="row">
+        <div class="field">
+          <label for="woDate">Data</label>
+          <input type="date" id="woDate">
         </div>
         <div class="field">
-          <label for="wWeight">Weight</label>
-          <input type="number" id="wWeight" step="0.1" min="0" placeholder="e.g. 82.4">
+          <label>Jednostka</label>
+          <div class="segmented" id="woUnitSeg">
+            <button data-val="kg" class="active">KG</button>
+            <button data-val="lb">LB</button>
+          </div>
         </div>
-        <button class="calc-btn" id="wSaveBtn">LOG WEIGHT</button>
-        <p id="wSaveMsg" style="text-align:center; color:var(--chalk-dim); font-size:12.5px; margin:10px 0 0; min-height:16px;"></p>
       </div>
 
-      <div class="card">
-        <h2>RECENT ENTRIES</h2>
-        <div id="entryList" class="entry-list">
-          <p style="color:var(--chalk-dim); font-size:13px;">Nothing logged yet.</p>
-        </div>
+      <datalist id="exerciseSuggestions"></datalist>
+
+      <div id="exerciseBlocks"></div>
+
+      <button type="button" class="ghost-btn" id="addExerciseBtn">+ Dodaj Ćwiczenie</button>
+      <button class="calc-btn" id="woSaveBtn" style="margin-top:14px;">ZAPISZ TRENING</button>
+      <p id="woSaveMsg" style="text-align:center; color:var(--chalk-dim); font-size:12.5px; margin:10px 0 0; min-height:16px;"></p>
+    </div>
+
+    <div class="card">
+      <h2>OSTATNIE 5 TRENINGÓW</h2>
+      <div id="workoutHistory" class="workout-history">
+        <p style="color:var(--chalk-dim); font-size:13px;">Jeszcze nic nie zapisano.</p>
       </div>
     </div>
   </div>
@@ -397,15 +452,15 @@ function renderAuthUI(user){
     area.innerHTML = `
       <div class="user-chip">
         <img src="${user.photoURL || ''}" alt="">
-        <span>${(user.displayName || 'Account').split(' ')[0]}</span>
-        <button id="signOutBtn" class="auth-btn small">Sign out</button>
+        <span>${(user.displayName || 'Konto').split(' ')[0]}</span>
+        <button id="signOutBtn" class="auth-btn small">Wyloguj</button>
       </div>`;
     document.getElementById('signOutBtn').addEventListener('click', () => auth.signOut());
   } else {
-    area.innerHTML = `<button id="loginBtn" class="auth-btn">🔐 Sign in with Google</button>`;
+    area.innerHTML = `<button id="loginBtn" class="auth-btn">🔐 Zaloguj się przez Google</button>`;
     document.getElementById('loginBtn').addEventListener('click', () => {
       auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-        .catch(err => console.error('Sign-in failed', err));
+        .catch(err => console.error('Logowanie nieudane', err));
     });
   }
 }
@@ -414,27 +469,38 @@ auth.onAuthStateChanged(user => {
   currentUser = user;
   renderAuthUI(user);
   document.getElementById('signedOutNotice').style.display = user ? 'none' : 'block';
-  document.getElementById('weightApp').style.display = user ? 'block' : 'none';
-  if (user && typeof loadEntries === 'function') loadEntries();
+  document.getElementById('workoutApp').style.display = user ? 'block' : 'none';
+  if (user && typeof loadWorkouts === 'function') loadWorkouts();
 });
 renderAuthUI(null);
 </script>
 <script>
 (function(){
-  const state = { unit: 'kg', entries: [] };
+  const state = { unit: 'kg', draft: [], history: [] };
+
+  const EXERCISE_NAMES = [
+    'Back Squat', 'Front Squat', 'Deadlift', 'Romanian Deadlift', 'Bulgarian Split Squat',
+    'Hip Thrust', 'Good Morning', 'Barbell Lunge', 'Box Squat',
+    'Bench Press', 'Incline Bench Press', 'Overhead Press', 'Bent-Over Row',
+    'Close-Grip Bench Press', 'Push Press', 'Barbell Curl', 'Skull Crusher', 'Upright Row',
+    'Goblet Squat', 'Dumbbell Romanian Deadlift', 'Dumbbell Lunge', 'Dumbbell Step-Up',
+    'Dumbbell Bulgarian Split Squat', 'Dumbbell Hip Thrust', 'Dumbbell Calf Raise',
+    'Dumbbell Bench Press', 'Dumbbell Incline Press', 'Dumbbell Shoulder Press', 'Dumbbell Row',
+    'Dumbbell Curl', 'Dumbbell Lateral Raise', 'Dumbbell Tricep Extension', 'Dumbbell Fly'
+  ];
 
   const els = {
-    date: document.getElementById('wDate'),
-    weight: document.getElementById('wWeight'),
-    unitSeg: document.getElementById('wUnitSeg'),
-    saveBtn: document.getElementById('wSaveBtn'),
-    saveMsg: document.getElementById('wSaveMsg'),
-    chart: document.getElementById('weightChart'),
-    latest: document.getElementById('chartLatest'),
-    latestLabel: document.getElementById('chartLatestLabel'),
-    delta: document.getElementById('chartDelta'),
-    list: document.getElementById('entryList'),
+    date: document.getElementById('woDate'),
+    unitSeg: document.getElementById('woUnitSeg'),
+    blocks: document.getElementById('exerciseBlocks'),
+    addExerciseBtn: document.getElementById('addExerciseBtn'),
+    saveBtn: document.getElementById('woSaveBtn'),
+    saveMsg: document.getElementById('woSaveMsg'),
+    history: document.getElementById('workoutHistory'),
+    suggestions: document.getElementById('exerciseSuggestions'),
   };
+
+  els.suggestions.innerHTML = EXERCISE_NAMES.map(n => `<option value="${n}">`).join('');
 
   function todayStr(){
     const d = new Date();
@@ -447,154 +513,171 @@ renderAuthUI(null);
   function fromKg(w, unit){ return unit === 'lb' ? w * 2.20462 : w; }
   function fmt(w){ return Math.round(w * 10) / 10; }
 
+  function emptyExercise(){ return { name: '', sets: [{ reps: '', weight: '' }] }; }
+  state.draft = [emptyExercise()];
+
+  function syncDraftFromDOM(){
+    document.querySelectorAll('.exercise-block').forEach((block, i) => {
+      if (!state.draft[i]) return;
+      state.draft[i].name = block.querySelector('.ex-name').value;
+      const rows = block.querySelectorAll('.set-row:not(.header)');
+      rows.forEach((row, j) => {
+        if (!state.draft[i].sets[j]) return;
+        state.draft[i].sets[j].reps = row.querySelector('.set-reps').value;
+        state.draft[i].sets[j].weight = row.querySelector('.set-weight').value;
+      });
+    });
+  }
+
+  function renderBlocks(){
+    els.blocks.innerHTML = state.draft.map((ex, i) => `
+      <div class="exercise-block" data-ex="${i}">
+        <div class="exercise-block-head">
+          <input type="text" class="ex-name" list="exerciseSuggestions" placeholder="Nazwa ćwiczenia" value="${ex.name.replace(/"/g,'&quot;')}">
+          <button type="button" class="remove-ex" data-ex="${i}" title="Usuń ćwiczenie">✕</button>
+        </div>
+        <div class="set-row header">
+          <span>Seria</span><span>Powt.</span><span>Ciężar (${state.unit})</span><span></span>
+        </div>
+        ${ex.sets.map((s, j) => `
+          <div class="set-row">
+            <span class="set-num">${j + 1}</span>
+            <input type="number" class="set-reps" min="0" placeholder="powt." value="${s.reps}">
+            <input type="number" class="set-weight" min="0" step="0.5" placeholder="ciężar" value="${s.weight}">
+            <button type="button" class="remove-set" data-ex="${i}" data-set="${j}" title="Usuń serię">✕</button>
+          </div>
+        `).join('')}
+        <button type="button" class="add-set-btn" data-ex="${i}">+ Dodaj Serię</button>
+      </div>
+    `).join('');
+  }
+
+  els.blocks.addEventListener('click', e => {
+    const addSetBtn = e.target.closest('.add-set-btn');
+    const removeSetBtn = e.target.closest('.remove-set');
+    const removeExBtn = e.target.closest('.remove-ex');
+
+    if (addSetBtn){
+      syncDraftFromDOM();
+      const i = parseInt(addSetBtn.dataset.ex);
+      const lastSet = state.draft[i].sets[state.draft[i].sets.length - 1];
+      state.draft[i].sets.push({ reps: lastSet ? lastSet.reps : '', weight: lastSet ? lastSet.weight : '' });
+      renderBlocks();
+    } else if (removeSetBtn){
+      syncDraftFromDOM();
+      const i = parseInt(removeSetBtn.dataset.ex), j = parseInt(removeSetBtn.dataset.set);
+      state.draft[i].sets.splice(j, 1);
+      if (state.draft[i].sets.length === 0) state.draft[i].sets.push({ reps: '', weight: '' });
+      renderBlocks();
+    } else if (removeExBtn){
+      syncDraftFromDOM();
+      const i = parseInt(removeExBtn.dataset.ex);
+      state.draft.splice(i, 1);
+      if (state.draft.length === 0) state.draft.push(emptyExercise());
+      renderBlocks();
+    }
+  });
+
+  els.addExerciseBtn.addEventListener('click', () => {
+    syncDraftFromDOM();
+    state.draft.push(emptyExercise());
+    renderBlocks();
+  });
+
   els.unitSeg.addEventListener('click', e => {
     const btn = e.target.closest('button'); if (!btn) return;
+    syncDraftFromDOM();
     state.unit = btn.dataset.val;
     els.unitSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
-    renderChart();
-    renderList();
+    renderBlocks();
+    renderHistory();
   });
 
   els.saveBtn.addEventListener('click', async () => {
     if (!currentUser) return;
+    syncDraftFromDOM();
     const dateStr = els.date.value || todayStr();
-    const weightVal = parseFloat(els.weight.value);
-    if (!dateStr || !weightVal || weightVal <= 0){
-      els.saveMsg.textContent = 'Enter a valid date and weight.';
+
+    const exercises = state.draft
+      .filter(ex => ex.name.trim())
+      .map(ex => ({
+        name: ex.name.trim(),
+        sets: ex.sets
+          .filter(s => s.reps !== '' && s.weight !== '')
+          .map(s => ({ reps: parseInt(s.reps), weightKg: toKg(parseFloat(s.weight), state.unit) }))
+      }))
+      .filter(ex => ex.sets.length > 0);
+
+    if (exercises.length === 0){
+      els.saveMsg.textContent = 'Dodaj przynajmniej jedno ćwiczenie z ukończoną serią.';
       return;
     }
+
     els.saveBtn.disabled = true;
     try {
-      await db.collection('users').doc(currentUser.uid).collection('bodyweight').doc(dateStr).set({
+      await db.collection('users').doc(currentUser.uid).collection('workouts').add({
         date: dateStr,
-        weightKg: toKg(weightVal, state.unit),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        exercises,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      els.saveMsg.textContent = `Logged ${fmt(weightVal)}${state.unit} for ${dateStr}.`;
-      els.weight.value = '';
-      await loadEntries();
+      els.saveMsg.textContent = `Trening zapisany dla ${dateStr}.`;
+      state.draft = [emptyExercise()];
+      renderBlocks();
+      await loadWorkouts();
     } catch (err) {
       console.error('Save failed', err);
-      els.saveMsg.textContent = 'Save failed — try again.';
+      els.saveMsg.textContent = 'Zapis nieudany — spróbuj ponownie.';
     }
     els.saveBtn.disabled = false;
   });
 
-  async function deleteEntry(dateStr){
+  async function deleteWorkout(id){
     if (!currentUser) return;
     try {
-      await db.collection('users').doc(currentUser.uid).collection('bodyweight').doc(dateStr).delete();
-      await loadEntries();
+      await db.collection('users').doc(currentUser.uid).collection('workouts').doc(id).delete();
+      await loadWorkouts();
     } catch (err) { console.error('Delete failed', err); }
   }
 
-  async function loadEntries(){
+  async function loadWorkouts(){
     if (!currentUser) return;
     try {
       const snap = await db.collection('users').doc(currentUser.uid)
-        .collection('bodyweight').orderBy('date', 'asc').get();
-      state.entries = snap.docs.map(d => d.data());
+        .collection('workouts').orderBy('date', 'desc').limit(5).get();
+      state.history = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     } catch (err) {
       console.error('Load failed', err);
-      state.entries = [];
+      state.history = [];
     }
-    renderChart();
-    renderList();
+    renderHistory();
   }
 
-  function renderChart(){
-    const entries = state.entries;
-    if (entries.length === 0){
-      els.chart.innerHTML = `<text x="450" y="140" text-anchor="middle" fill="var(--chalk-dim)" font-family="Inter, sans-serif" font-size="14">No entries yet — log your first weigh-in below.</text>`;
-      els.latest.textContent = '—';
-      els.latestLabel.textContent = 'No entries yet';
-      els.delta.textContent = '';
+  function renderHistory(){
+    if (state.history.length === 0){
+      els.history.innerHTML = `<p style="color:var(--chalk-dim); font-size:13px;">Jeszcze nic nie zapisano.</p>`;
       return;
     }
-
-    const W = 900, H = 280, padL = 55, padR = 20, padT = 20, padB = 34;
-    const weights = entries.map(e => fromKg(e.weightKg, state.unit));
-    const minW = Math.min(...weights), maxW = Math.max(...weights);
-    const pad = Math.max((maxW - minW) * 0.15, state.unit === 'kg' ? 1 : 2);
-    const yMin = minW - pad, yMax = maxW + pad;
-
-    const dates = entries.map(e => new Date(e.date + 'T00:00:00').getTime());
-    const xMin = dates[0], xMax = dates[dates.length - 1];
-    const xSpan = Math.max(xMax - xMin, 1);
-
-    function xPos(t){ return entries.length === 1 ? (padL + (W - padL - padR) / 2) : padL + ((t - xMin) / xSpan) * (W - padL - padR); }
-    function yPos(w){ return padT + (1 - (w - yMin) / (yMax - yMin || 1)) * (H - padT - padB); }
-
-    const points = entries.map((e, i) => [xPos(dates[i]), yPos(fromKg(e.weightKg, state.unit))]);
-
-    let svg = '';
-    // gridlines
-    for (let i = 0; i <= 3; i++){
-      const gy = padT + (i / 3) * (H - padT - padB);
-      const val = yMax - (i / 3) * (yMax - yMin);
-      svg += `<line x1="${padL}" y1="${gy}" x2="${W - padR}" y2="${gy}" stroke="var(--card-border)" stroke-width="1"/>`;
-      svg += `<text x="${padL - 10}" y="${gy + 4}" text-anchor="end" fill="var(--chalk-dim)" font-family="JetBrains Mono, monospace" font-size="11">${fmt(val)}</text>`;
-    }
-
-    if (points.length > 1){
-      const linePath = points.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
-      const areaPath = linePath + ` L${points[points.length-1][0].toFixed(1)},${H-padB} L${points[0][0].toFixed(1)},${H-padB} Z`;
-      svg += `<defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="var(--blue)" stop-opacity="0.25"/>
-        <stop offset="100%" stop-color="var(--blue)" stop-opacity="0"/>
-      </linearGradient></defs>`;
-      svg += `<path d="${areaPath}" fill="url(#areaFill)"/>`;
-      svg += `<path d="${linePath}" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-    }
-    points.forEach(p => {
-      svg += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4" fill="var(--bg)" stroke="var(--blue)" stroke-width="2.5"/>`;
-    });
-
-    // x-axis first/last date labels
-    const fmtDate = t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    svg += `<text x="${padL}" y="${H - 10}" fill="var(--chalk-dim)" font-family="JetBrains Mono, monospace" font-size="11">${fmtDate(xMin)}</text>`;
-    if (entries.length > 1){
-      svg += `<text x="${W - padR}" y="${H - 10}" text-anchor="end" fill="var(--chalk-dim)" font-family="JetBrains Mono, monospace" font-size="11">${fmtDate(xMax)}</text>`;
-    }
-
-    els.chart.innerHTML = svg;
-
-    const latestW = fromKg(entries[entries.length - 1].weightKg, state.unit);
-    els.latest.textContent = `${fmt(latestW)}`;
-    els.latest.insertAdjacentHTML('beforeend', `<span style="font-size:16px; color:var(--chalk-dim);"> ${state.unit}</span>`);
-    els.latestLabel.textContent = `as of ${entries[entries.length - 1].date}`;
-
-    if (entries.length > 1){
-      const prevW = fromKg(entries[entries.length - 2].weightKg, state.unit);
-      const diff = fmt(latestW - prevW);
-      const sign = diff > 0 ? '+' : '';
-      els.delta.textContent = `${sign}${diff}${state.unit} since last entry`;
-    } else {
-      els.delta.textContent = '';
-    }
-  }
-
-  function renderList(){
-    const entries = [...state.entries].reverse();
-    if (entries.length === 0){
-      els.list.innerHTML = `<p style="color:var(--chalk-dim); font-size:13px;">Nothing logged yet.</p>`;
-      return;
-    }
-    els.list.innerHTML = entries.map(e => {
-      const w = fmt(fromKg(e.weightKg, state.unit));
-      return `<div class="entry-row">
-        <span class="date">${e.date}</span>
-        <span class="val">${w} ${state.unit}</span>
-        <button class="del" data-date="${e.date}" title="Delete entry">✕</button>
-      </div>`;
-    }).join('');
-    els.list.querySelectorAll('.del').forEach(btn => {
-      btn.addEventListener('click', () => deleteEntry(btn.dataset.date));
+    els.history.innerHTML = state.history.map(w => `
+      <div class="workout-entry">
+        <div class="workout-entry-head">
+          <span class="date">${w.date}</span>
+          <button class="del" data-id="${w.id}" title="Usuń trening">✕</button>
+        </div>
+        ${w.exercises.map(ex => `
+          <div class="ex-line">
+            <b>${ex.name}</b><br>
+            ${ex.sets.map(s => `<span class="set-chip">${fmt(fromKg(s.weightKg, state.unit))}${state.unit} × ${s.reps}</span>`).join('')}
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+    els.history.querySelectorAll('.del').forEach(btn => {
+      btn.addEventListener('click', () => deleteWorkout(btn.dataset.id));
     });
   }
 
-  window.loadEntries = loadEntries;
-  renderChart();
+  window.loadWorkouts = loadWorkouts;
+  renderBlocks();
 })();
 </script>
 </body>
