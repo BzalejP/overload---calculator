@@ -247,12 +247,31 @@
   .flag-btn img{ width:22px; height:16px; border-radius:3px; display:block; object-fit:cover; }
   .flag-btn:hover{ opacity:0.85; }
   .flag-btn.active{ opacity:1; border-color: var(--card-border); background:#101116; cursor:default; }
+
+  .page-nav{ display:flex; gap:8px; }
+  .topbar-left{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .page-nav a{
+    font-family:'Inter', sans-serif; font-size:13px; font-weight:600;
+    color: var(--chalk-dim); text-decoration:none;
+    padding: 8px 14px; border-radius: 999px; border:1px solid transparent;
+    transition: all 0.15s ease;
+  }
+  .page-nav a:hover{ color: var(--chalk); }
+  .page-nav a.active{
+    color: var(--chalk); background:#101116; border-color: var(--card-border);
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
-    <div id="authArea"></div>
+    <div class="topbar-left">
+      <div id="authArea"></div>
+      <div class="page-nav">
+        <a href="index.html" class="active">Calculator</a>
+        <a href="weight.html">Body Weight</a>
+      </div>
+    </div>
     <div class="lang-flags">
       <span class="flag-btn active" title="English"><img src="https://flagcdn.com/24x18/gb.png" srcset="https://flagcdn.com/48x36/gb.png 2x" alt="English"></span>
       <a class="flag-btn" href="index-pl.html" title="Polski"><img src="https://flagcdn.com/24x18/pl.png" srcset="https://flagcdn.com/48x36/pl.png 2x" alt="Polski"></a>
@@ -415,14 +434,12 @@
 //      }
 // =====================================================================
 const firebaseConfig = {
-    apiKey: "AIzaSyD7tmVGL4xYb5u6KGzmQ8Q7RPDgQRK05Ac",
-  authDomain: "progressive-overload-d767a.firebaseapp.com",
-  projectId: "progressive-overload-d767a",
-  storageBucket: "progressive-overload-d767a.firebasestorage.app",
-  messagingSenderId: "428054863511",
-  appId: "1:428054863511:web:b8dd0d5e2f8fcd43ad53d2",
-  measurementId: "G-GE0TYV9C4D"
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
