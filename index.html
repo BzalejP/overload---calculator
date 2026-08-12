@@ -436,25 +436,25 @@
 //      }
 // =====================================================================
 const firebaseConfig = {
- apiKey: "AIzaSyD7tmVGL4xYb5u6KGzmQ8Q7RPDgQRK05Ac",
-
-  authDomain: "progressive-overload-d767a.firebaseapp.com",
-
-  projectId: "progressive-overload-d767a",
-
-  storageBucket: "progressive-overload-d767a.firebasestorage.app",
-
-  messagingSenderId: "428054863511",
-
-  appId: "1:428054863511:web:b8dd0d5e2f8fcd43ad53d2",
-
-  measurementId: "G-GE0TYV9C4D"
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 let currentUser = null;
+
+// LOCAL persistence survives full page navigations (this site is multi-page,
+// not a single-page app), which mobile browsers don't always default to.
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(err => console.error('Persistence setup failed', err));
+
+function isMobileDevice(){
+  return /Android|iPhone|iPad|iPod|Mobile|webOS/i.test(navigator.userAgent);
+}
 
 function renderAuthUI(user){
   const area = document.getElementById('authArea');
@@ -469,8 +469,14 @@ function renderAuthUI(user){
   } else {
     area.innerHTML = `<button id="loginBtn" class="auth-btn">🔐 Sign in with Google</button>`;
     document.getElementById('loginBtn').addEventListener('click', () => {
-      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-        .catch(err => console.error('Sign-in failed', err));
+      const provider = new firebase.auth.GoogleAuthProvider();
+  // Popups are unreliable on mobile (blocked, or fail inside in-app
+  // browsers like Instagram/Facebook) — use a full-page redirect there.
+      if (isMobileDevice()){
+        auth.signInWithRedirect(provider).catch(err => console.error('Sign-in failed', err));
+      } else {
+        auth.signInWithPopup(provider).catch(err => console.error('Sign-in failed', err));
+      }
     });
   }
 }
@@ -512,6 +518,11 @@ async function loadExerciseEntry(){
     }
   } catch (err) { console.error('Load failed', err); }
 }
+
+// Surfaces any error from a completed mobile redirect sign-in (e.g. an
+// unauthorized domain) — onAuthStateChanged below still fires normally
+// once the user is signed in either way.
+auth.getRedirectResult().catch(err => console.error('Redirect sign-in failed', err));
 
 auth.onAuthStateChanged(user => {
   currentUser = user;
