@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Overload — Workout Log</title>
+<title>Overload — Your Rank</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -315,6 +315,35 @@
   }
 
   .workout-history{ display:flex; flex-direction:column; gap:12px; }
+
+  .rank-hero{ margin-bottom:22px; }
+  .rank-hero-top{ display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; margin-bottom:6px; }
+  .rank-percentile{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:56px; color: var(--blue); line-height:1; }
+  .rank-percentile-suffix{ font-size:22px; color:var(--chalk-dim); font-weight:400; }
+  .rank-percentile-caption{ color:var(--chalk-dim); font-size:14px; margin-bottom:4px; }
+  .rank-score-label{ color:var(--chalk-dim); font-size:12.5px; font-family:'JetBrains Mono', monospace; margin-bottom:18px; }
+  .rank-curve-wrap{ position:relative; }
+  #rankCurve{ width:100%; height:auto; display:block; }
+  .rank-curve-label{
+    position:absolute; bottom:2px; font-size:11px; color:var(--chalk-dim);
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  .lift-breakdown{ display:flex; flex-direction:column; gap:10px; }
+  .lift-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:#101116; border:1px solid var(--card-border); border-radius:10px; padding:12px 14px;
+  }
+  .lift-row .lift-name{ font-size:14px; font-weight:600; color:var(--chalk); }
+  .lift-row .lift-meta{ font-size:12px; color:var(--chalk-dim); font-family:'JetBrains Mono', monospace; margin-top:2px; }
+  .lift-row .lift-tier{
+    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700;
+    padding:5px 10px; border-radius:999px; flex-shrink:0; color:#101116;
+    background: var(--blue);
+  }
+  .lift-row.unlogged{ opacity:0.55; }
+  .lift-row.unlogged .lift-tier{ background:none !important; border:1px solid var(--card-border); color:var(--chalk-dim) !important; }
+  .rank-disclaimer{ color:var(--chalk-dim); font-size:11.5px; line-height:1.6; margin:16px 0 0; }
   .workout-entry{
     background:#101116; border:1px solid var(--card-border); border-radius:12px; padding:14px;
   }
@@ -357,57 +386,49 @@
       <div class="page-nav">
         <a href="index.html">Calculator</a>
         <a href="weight.html">Body Weight</a>
-        <a href="workout.html" class="active">Workout Log</a>
-        <a href="rank.html">Rank</a>
+        <a href="workout.html">Workout Log</a>
+        <a href="rank.html" class="active">Rank</a>
       </div>
     </div>
     <div class="lang-flags">
       <span class="flag-btn active" title="English"><img src="https://flagcdn.com/24x18/gb.png" srcset="https://flagcdn.com/48x36/gb.png 2x" alt="English"></span>
-      <a class="flag-btn" href="workout-pl.html" title="Polski"><img src="https://flagcdn.com/24x18/pl.png" srcset="https://flagcdn.com/48x36/pl.png 2x" alt="Polski"></a>
+      <a class="flag-btn" href="rank-pl.html" title="Polski"><img src="https://flagcdn.com/24x18/pl.png" srcset="https://flagcdn.com/48x36/pl.png 2x" alt="Polski"></a>
     </div>
   </div>
 
   <header>
-    <div class="eyebrow">Every Set, Every Session</div>
-    <h1>WORKOUT LOG</h1>
-    <p class="sub">Log each exercise, set, rep, and weight — then look back at your last few sessions.</p>
+    <div class="eyebrow">Where You Stand</div>
+    <h1>YOUR RANK</h1>
+    <p class="sub">See how your best lifts, relative to bodyweight, compare to the general population.</p>
   </header>
 
   <div id="signedOutNotice" class="card" style="display:none; text-align:center; margin-bottom:22px;">
-    <p style="color:var(--chalk-dim); font-size:14px; margin:0;">Sign in with Google (top left) to start logging workouts — your history is saved to your account and synced across devices.</p>
+    <p style="color:var(--chalk-dim); font-size:14px; margin:0;">Sign in with Google (top left) to see your rank — it's calculated from your logged workouts and body weight.</p>
   </div>
 
-  <div id="workoutApp" style="display:none;">
-    <div class="card" style="margin-bottom:22px;">
-      <h2>LOG A WORKOUT</h2>
+  <div id="rankApp" style="display:none;">
 
-      <div class="row">
-        <div class="field">
-          <label for="woDate">Date</label>
-          <input type="date" id="woDate">
+    <div id="rankEmptyState" class="card" style="display:none; text-align:center;">
+      <p style="color:var(--chalk-dim); font-size:14px; margin:0;" id="rankEmptyText"></p>
+    </div>
+
+    <div id="rankContent" style="display:none;">
+      <div class="card rank-hero">
+        <div class="rank-hero-top">
+          <span class="rank-percentile" id="rankPercentile">—</span>
+          <span class="rank-percentile-suffix">percentile</span>
         </div>
-        <div class="field">
-          <label>Unit</label>
-          <div class="segmented" id="woUnitSeg">
-            <button data-val="kg" class="active">KG</button>
-            <button data-val="lb">LB</button>
-          </div>
+        <div class="rank-percentile-caption" id="rankCaption">—</div>
+        <div class="rank-score-label" id="rankScoreLabel">—</div>
+        <div class="rank-curve-wrap">
+          <svg id="rankCurve" viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg"></svg>
         </div>
       </div>
 
-      <datalist id="exerciseSuggestions"></datalist>
-
-      <div id="exerciseBlocks"></div>
-
-      <button type="button" class="ghost-btn" id="addExerciseBtn">+ Add Exercise</button>
-      <button class="calc-btn" id="woSaveBtn" style="margin-top:14px;">SAVE WORKOUT</button>
-      <p id="woSaveMsg" style="text-align:center; color:var(--chalk-dim); font-size:12.5px; margin:10px 0 0; min-height:16px;"></p>
-    </div>
-
-    <div class="card">
-      <h2>LAST 5 WORKOUTS</h2>
-      <div id="workoutHistory" class="workout-history">
-        <p style="color:var(--chalk-dim); font-size:13px;">Nothing logged yet.</p>
+      <div class="card">
+        <h2>LIFT BREAKDOWN</h2>
+        <div id="liftBreakdown" class="lift-breakdown"></div>
+        <p class="rank-disclaimer">Estimated one-rep max via the Epley formula, from your best logged set of each lift, divided by your latest logged body weight, mapped to a percentile against the general adult population (not just people who train) using a simplified statistical curve. This is a rough, unisex, for-fun estimate — not a scientific or medical assessment. Body weight is only ever used to normalize the lift numbers, never scored on its own.</p>
       </div>
     </div>
   </div>
@@ -470,216 +491,168 @@ auth.onAuthStateChanged(user => {
   currentUser = user;
   renderAuthUI(user);
   document.getElementById('signedOutNotice').style.display = user ? 'none' : 'block';
-  document.getElementById('workoutApp').style.display = user ? 'block' : 'none';
-  if (user && typeof loadWorkouts === 'function') loadWorkouts();
+  document.getElementById('rankApp').style.display = user ? 'block' : 'none';
+  if (user && typeof computeRank === 'function') computeRank();
 });
 renderAuthUI(null);
 </script>
 <script>
 (function(){
-  const state = { unit: 'kg', draft: [], history: [] };
-
-  const EXERCISE_NAMES = [
-    'Back Squat', 'Front Squat', 'Deadlift', 'Romanian Deadlift', 'Bulgarian Split Squat',
-    'Hip Thrust', 'Good Morning', 'Barbell Lunge', 'Box Squat',
-    'Bench Press', 'Incline Bench Press', 'Overhead Press', 'Bent-Over Row',
-    'Close-Grip Bench Press', 'Push Press', 'Barbell Curl', 'Skull Crusher', 'Upright Row',
-    'Goblet Squat', 'Dumbbell Romanian Deadlift', 'Dumbbell Lunge', 'Dumbbell Step-Up',
-    'Dumbbell Bulgarian Split Squat', 'Dumbbell Hip Thrust', 'Dumbbell Calf Raise',
-    'Dumbbell Bench Press', 'Dumbbell Incline Press', 'Dumbbell Shoulder Press', 'Dumbbell Row',
-    'Dumbbell Curl', 'Dumbbell Lateral Raise', 'Dumbbell Tricep Extension', 'Dumbbell Fly'
-  ];
-
-  const els = {
-    date: document.getElementById('woDate'),
-    unitSeg: document.getElementById('woUnitSeg'),
-    blocks: document.getElementById('exerciseBlocks'),
-    addExerciseBtn: document.getElementById('addExerciseBtn'),
-    saveBtn: document.getElementById('woSaveBtn'),
-    saveMsg: document.getElementById('woSaveMsg'),
-    history: document.getElementById('workoutHistory'),
-    suggestions: document.getElementById('exerciseSuggestions'),
+  // Median bodyweight-multiple and steepness per lift, calibrated so the
+  // percentile reflects standing against the GENERAL ADULT POPULATION —
+  // not just people who train. Most adults never barbell-lift at all, so
+  // even modest ratios land at high percentiles; this is intentional and
+  // matches the brief, not a bug. Simplified, unisex, for-fun estimates.
+  const LIFTS = {
+    squat:    { label: 'Squat',          median: 0.35, k: 3.0, match: ['back squat', 'front squat', 'box squat'] },
+    bench:    { label: 'Bench Press',    median: 0.25, k: 3.5, match: ['bench press', 'incline bench press', 'close-grip bench press'] },
+    ohp:      { label: 'Overhead Press', median: 0.15, k: 4.5, match: ['overhead press', 'push press'] },
+    deadlift: { label: 'Deadlift',       median: 0.45, k: 2.5, match: ['deadlift'] }
   };
 
-  els.suggestions.innerHTML = EXERCISE_NAMES.map(n => `<option value="${n}">`).join('');
-
-  function todayStr(){
-    const d = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  }
-  els.date.value = todayStr();
-
-  function toKg(w, unit){ return unit === 'lb' ? w / 2.20462 : w; }
-  function fromKg(w, unit){ return unit === 'lb' ? w * 2.20462 : w; }
-  function fmt(w){ return Math.round(w * 10) / 10; }
-
-  function emptyExercise(){ return { name: '', sets: [{ reps: '', weight: '' }] }; }
-  state.draft = [emptyExercise()];
-
-  function syncDraftFromDOM(){
-    document.querySelectorAll('.exercise-block').forEach((block, i) => {
-      if (!state.draft[i]) return;
-      state.draft[i].name = block.querySelector('.ex-name').value;
-      const rows = block.querySelectorAll('.set-row:not(.header)');
-      rows.forEach((row, j) => {
-        if (!state.draft[i].sets[j]) return;
-        state.draft[i].sets[j].reps = row.querySelector('.set-reps').value;
-        state.draft[i].sets[j].weight = row.querySelector('.set-weight').value;
-      });
-    });
-  }
-
-  function renderBlocks(){
-    els.blocks.innerHTML = state.draft.map((ex, i) => `
-      <div class="exercise-block" data-ex="${i}">
-        <div class="exercise-block-head">
-          <input type="text" class="ex-name" list="exerciseSuggestions" placeholder="Exercise name" value="${ex.name.replace(/"/g,'&quot;')}">
-          <button type="button" class="remove-ex" data-ex="${i}" title="Remove exercise">✕</button>
-        </div>
-        <div class="set-row header">
-          <span>Set</span><span>Reps</span><span>Weight (${state.unit})</span><span></span>
-        </div>
-        ${ex.sets.map((s, j) => `
-          <div class="set-row">
-            <span class="set-num">${j + 1}</span>
-            <input type="number" class="set-reps" min="0" placeholder="reps" value="${s.reps}">
-            <input type="number" class="set-weight" min="0" step="0.5" placeholder="weight" value="${s.weight}">
-            <button type="button" class="remove-set" data-ex="${i}" data-set="${j}" title="Remove set">✕</button>
-          </div>
-        `).join('')}
-        <button type="button" class="add-set-btn" data-ex="${i}">+ Add Set</button>
-      </div>
-    `).join('');
-  }
-
-  els.blocks.addEventListener('click', e => {
-    const addSetBtn = e.target.closest('.add-set-btn');
-    const removeSetBtn = e.target.closest('.remove-set');
-    const removeExBtn = e.target.closest('.remove-ex');
-
-    if (addSetBtn){
-      syncDraftFromDOM();
-      const i = parseInt(addSetBtn.dataset.ex);
-      const lastSet = state.draft[i].sets[state.draft[i].sets.length - 1];
-      state.draft[i].sets.push({ reps: lastSet ? lastSet.reps : '', weight: lastSet ? lastSet.weight : '' });
-      renderBlocks();
-    } else if (removeSetBtn){
-      syncDraftFromDOM();
-      const i = parseInt(removeSetBtn.dataset.ex), j = parseInt(removeSetBtn.dataset.set);
-      state.draft[i].sets.splice(j, 1);
-      if (state.draft[i].sets.length === 0) state.draft[i].sets.push({ reps: '', weight: '' });
-      renderBlocks();
-    } else if (removeExBtn){
-      syncDraftFromDOM();
-      const i = parseInt(removeExBtn.dataset.ex);
-      state.draft.splice(i, 1);
-      if (state.draft.length === 0) state.draft.push(emptyExercise());
-      renderBlocks();
+  function matchCategory(name){
+    const n = (name || '').trim().toLowerCase();
+    for (const [cat, def] of Object.entries(LIFTS)){
+      if (def.match.includes(n)) return cat;
     }
-  });
+    return null;
+  }
 
-  els.addExerciseBtn.addEventListener('click', () => {
-    syncDraftFromDOM();
-    state.draft.push(emptyExercise());
-    renderBlocks();
-  });
+  function ratioToPercentile(ratio, def){
+    // Logistic curve: 50th percentile at the median ratio, steeper k = faster climb.
+    const p = 100 / (1 + Math.exp(-def.k * (ratio - def.median)));
+    return Math.max(0.1, Math.min(99.9, p));
+  }
 
-  els.unitSeg.addEventListener('click', e => {
-    const btn = e.target.closest('button'); if (!btn) return;
-    syncDraftFromDOM();
-    state.unit = btn.dataset.val;
-    els.unitSeg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
-    renderBlocks();
-    renderHistory();
-  });
+  function fmt1(n){ return Math.round(n * 10) / 10; }
+  function fmt2(n){ return Math.round(n * 100) / 100; }
+  function fmtPct(n){ return Math.round(n); }
 
-  els.saveBtn.addEventListener('click', async () => {
+  async function computeRank(){
     if (!currentUser) return;
-    syncDraftFromDOM();
-    const dateStr = els.date.value || todayStr();
 
-    const exercises = state.draft
-      .filter(ex => ex.name.trim())
-      .map(ex => ({
-        name: ex.name.trim(),
-        sets: ex.sets
-          .filter(s => s.reps !== '' && s.weight !== '')
-          .map(s => ({ reps: parseInt(s.reps), weightKg: toKg(parseFloat(s.weight), state.unit) }))
-      }))
-      .filter(ex => ex.sets.length > 0);
+    let bodyweightKg = null;
+    try {
+      const bwSnap = await db.collection('users').doc(currentUser.uid)
+        .collection('bodyweight').orderBy('date', 'desc').limit(1).get();
+      if (!bwSnap.empty) bodyweightKg = bwSnap.docs[0].data().weightKg;
+    } catch (err) { console.error('Body weight load failed', err); }
 
-    if (exercises.length === 0){
-      els.saveMsg.textContent = 'Add at least one exercise with a completed set.';
+    let workouts = [];
+    try {
+      const wSnap = await db.collection('users').doc(currentUser.uid).collection('workouts').get();
+      workouts = wSnap.docs.map(d => d.data());
+    } catch (err) { console.error('Workouts load failed', err); }
+
+    const emptyEl = document.getElementById('rankEmptyState');
+    const emptyText = document.getElementById('rankEmptyText');
+    const contentEl = document.getElementById('rankContent');
+
+    if (bodyweightKg == null){
+      emptyEl.style.display = 'block'; contentEl.style.display = 'none';
+      emptyText.textContent = 'Log at least one body weight entry to see your percentile.';
       return;
     }
 
-    els.saveBtn.disabled = true;
-    try {
-      await db.collection('users').doc(currentUser.uid).collection('workouts').add({
-        date: dateStr,
-        exercises,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    const best = {};
+    workouts.forEach(w => {
+      (w.exercises || []).forEach(ex => {
+        const cat = matchCategory(ex.name);
+        if (!cat) return;
+        (ex.sets || []).forEach(s => {
+          const e1rm = s.weightKg * (1 + (s.reps || 0) / 30);
+          if (!best[cat] || e1rm > best[cat].e1rm){
+            best[cat] = { e1rm, date: w.date };
+          }
+        });
       });
-      els.saveMsg.textContent = `Workout saved for ${dateStr}.`;
-      state.draft = [emptyExercise()];
-      renderBlocks();
-      await loadWorkouts();
-    } catch (err) {
-      console.error('Save failed', err);
-      els.saveMsg.textContent = 'Save failed — try again.';
-    }
-    els.saveBtn.disabled = false;
-  });
+    });
 
-  async function deleteWorkout(id){
-    if (!currentUser) return;
-    try {
-      await db.collection('users').doc(currentUser.uid).collection('workouts').doc(id).delete();
-      await loadWorkouts();
-    } catch (err) { console.error('Delete failed', err); }
-  }
+    const categories = Object.keys(LIFTS);
+    const results = categories.map(cat => {
+      const def = LIFTS[cat];
+      const b = best[cat];
+      if (!b) return { cat, def, logged: false };
+      const ratio = b.e1rm / bodyweightKg;
+      const percentile = ratioToPercentile(ratio, def);
+      return { cat, def, logged: true, e1rm: b.e1rm, date: b.date, ratio, percentile };
+    });
 
-  async function loadWorkouts(){
-    if (!currentUser) return;
-    try {
-      const snap = await db.collection('users').doc(currentUser.uid)
-        .collection('workouts').orderBy('date', 'desc').limit(5).get();
-      state.history = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (err) {
-      console.error('Load failed', err);
-      state.history = [];
-    }
-    renderHistory();
-  }
-
-  function renderHistory(){
-    if (state.history.length === 0){
-      els.history.innerHTML = `<p style="color:var(--chalk-dim); font-size:13px;">Nothing logged yet.</p>`;
+    const loggedResults = results.filter(r => r.logged);
+    if (loggedResults.length === 0){
+      emptyEl.style.display = 'block'; contentEl.style.display = 'none';
+      emptyText.textContent = 'Log at least one workout with Squat, Bench Press, Overhead Press, or Deadlift to see your percentile.';
       return;
     }
-    els.history.innerHTML = state.history.map(w => `
-      <div class="workout-entry">
-        <div class="workout-entry-head">
-          <span class="date">${w.date}</span>
-          <button class="del" data-id="${w.id}" title="Delete workout">✕</button>
-        </div>
-        ${w.exercises.map(ex => `
-          <div class="ex-line">
-            <b>${ex.name}</b><br>
-            ${ex.sets.map(s => `<span class="set-chip">${fmt(fromKg(s.weightKg, state.unit))}${state.unit} × ${s.reps}</span>`).join('')}
-          </div>
-        `).join('')}
-      </div>
-    `).join('');
-    els.history.querySelectorAll('.del').forEach(btn => {
-      btn.addEventListener('click', () => deleteWorkout(btn.dataset.id));
-    });
+
+    emptyEl.style.display = 'none'; contentEl.style.display = 'block';
+    const overallPercentile = loggedResults.reduce((sum, r) => sum + r.percentile, 0) / loggedResults.length;
+    renderRank(overallPercentile, results, loggedResults.length, categories.length);
   }
 
-  window.loadWorkouts = loadWorkouts;
-  renderBlocks();
+  function drawBellCurve(percentile){
+    const W = 900, H = 200, baseline = 175, peakY = 20, mid = 450, spread = 165;
+    const left = 30, right = 870;
+    const pts = [];
+    for (let x = left; x <= right; x += 6){
+      const y = baseline - (baseline - peakY) * Math.exp(-Math.pow((x - mid) / spread, 2));
+      pts.push([x, y]);
+    }
+    const curvePath = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+
+    const markerX = left + (percentile / 100) * (right - left);
+    const shadedPts = pts.filter(p => p[0] <= markerX);
+    let areaPath = '';
+    if (shadedPts.length > 1){
+      areaPath = `M${left},${baseline} ` + shadedPts.map(p => `L${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ') + ` L${markerX.toFixed(1)},${baseline} Z`;
+    }
+    const markerTopY = baseline - (baseline - peakY) * Math.exp(-Math.pow((markerX - mid) / spread, 2));
+
+    let svg = `
+      <defs><linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--blue)" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="var(--blue)" stop-opacity="0.05"/>
+      </linearGradient></defs>
+      <line x1="${left}" y1="${baseline}" x2="${right}" y2="${baseline}" stroke="var(--card-border)" stroke-width="1"/>
+      <path d="${areaPath}" fill="url(#curveFill)"/>
+      <path d="${curvePath}" fill="none" stroke="var(--card-border)" stroke-width="1.5"/>
+      <line x1="${markerX.toFixed(1)}" y1="${baseline}" x2="${markerX.toFixed(1)}" y2="${markerTopY.toFixed(1)}" stroke="var(--blue)" stroke-width="2" stroke-dasharray="3,3"/>
+      <circle cx="${markerX.toFixed(1)}" cy="${markerTopY.toFixed(1)}" r="5" fill="var(--blue)" stroke="var(--bg)" stroke-width="2"/>
+      <text x="${left}" y="195" fill="var(--chalk-dim)" font-family="JetBrains Mono, monospace" font-size="11">0th</text>
+      <text x="${mid}" y="195" text-anchor="middle" fill="var(--chalk-dim)" font-family="JetBrains Mono, monospace" font-size="11">50th</text>
+      <text x="${right}" y="195" text-anchor="end" fill="var(--chalk-dim)" font-family="JetBrains Mono, monospace" font-size="11">99th</text>
+    `;
+    document.getElementById('rankCurve').innerHTML = svg;
+  }
+
+  function renderRank(overallPercentile, results, loggedCount, totalCount){
+    document.getElementById('rankPercentile').textContent = fmtPct(overallPercentile);
+    document.getElementById('rankCaption').textContent =
+      `Stronger than roughly ${fmtPct(overallPercentile)}% of the general adult population`;
+    document.getElementById('rankScoreLabel').textContent = `Based on ${loggedCount} of ${totalCount} main lifts logged`;
+    drawBellCurve(overallPercentile);
+
+    const breakdown = document.getElementById('liftBreakdown');
+    breakdown.innerHTML = results.map(r => {
+      if (!r.logged){
+        return `<div class="lift-row unlogged">
+          <div><div class="lift-name">${r.def.label}</div><div class="lift-meta">Not logged yet</div></div>
+          <span class="lift-tier">—</span>
+        </div>`;
+      }
+      return `<div class="lift-row">
+        <div>
+          <div class="lift-name">${r.def.label}</div>
+          <div class="lift-meta">e1RM ${fmt1(r.e1rm)}kg · ${fmt2(r.ratio)}× bodyweight · best on ${r.date}</div>
+        </div>
+        <span class="lift-tier">${fmtPct(r.percentile)}th pct</span>
+      </div>`;
+    }).join('');
+  }
+
+  window.computeRank = computeRank;
 })();
+</script>
 </script>
 </body>
 </html>
