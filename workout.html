@@ -315,6 +315,26 @@
   }
 
   .workout-history{ display:flex; flex-direction:column; gap:12px; }
+
+  .muscle-card-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:6px; }
+  .muscle-sub{ color:var(--chalk-dim); font-size:12.5px; margin:0 0 14px; }
+  .muscle-figure-wrap{ position:relative; display:flex; justify-content:center; }
+  #muscleFigure{ width:100%; max-width:260px; height:auto; display:block; }
+  .muscle-region{ cursor:pointer; transition: fill 0.2s ease, opacity 0.15s ease; }
+  .muscle-region:hover{ opacity:0.85; }
+  .muscle-tooltip{
+    position:absolute; top:8px; left:50%; transform:translateX(-50%);
+    background:#101116; border:1px solid var(--card-border); border-radius:10px;
+    padding:8px 12px; font-size:12.5px; color:var(--chalk); text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,0.4); pointer-events:none; white-space:nowrap; z-index:5;
+  }
+  .muscle-tooltip .val{ color:var(--chalk-dim); font-family:'JetBrains Mono', monospace; font-size:11.5px; margin-top:2px; }
+  .muscle-legend{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; }
+  .muscle-legend span{ font-size:11px; color:var(--chalk-dim); font-family:'JetBrains Mono', monospace; }
+  .muscle-legend-bar{
+    width:120px; height:8px; border-radius:4px;
+    background: linear-gradient(90deg, #2a2b33, var(--blue), var(--red));
+  }
   .workout-entry{
     background:#101116; border:1px solid var(--card-border); border-radius:12px; padding:14px;
   }
@@ -405,6 +425,26 @@
     </div>
 
     <div class="card">
+      <div class="muscle-card-head">
+        <h2 style="margin:0;">MUSCLES TRAINED</h2>
+        <div class="segmented" id="muscleViewSeg">
+          <button data-val="front" class="active">Front</button>
+          <button data-val="back">Back</button>
+        </div>
+      </div>
+      <p class="muscle-sub">Total sets logged per muscle group, across all your workouts.</p>
+      <div class="muscle-figure-wrap">
+        <svg id="muscleFigure" viewBox="0 0 300 520" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="muscle-tooltip" id="muscleTooltip" style="display:none;"></div>
+      </div>
+      <div class="muscle-legend">
+        <span>Less</span>
+        <div class="muscle-legend-bar"></div>
+        <span>More</span>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>LAST 5 WORKOUTS</h2>
       <div id="workoutHistory" class="workout-history">
         <p style="color:var(--chalk-dim); font-size:13px;">Nothing logged yet.</p>
@@ -435,20 +475,12 @@
 //      }
 // =====================================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyD7tmVGL4xYb5u6KGzmQ8Q7RPDgQRK05Ac",
-
-  authDomain: "progressive-overload-d767a.firebaseapp.com",
-
-  projectId: "progressive-overload-d767a",
-
-  storageBucket: "progressive-overload-d767a.firebasestorage.app",
-
-  messagingSenderId: "428054863511",
-
-  appId: "1:428054863511:web:b8dd0d5e2f8fcd43ad53d2",
-
-  measurementId: "G-GE0TYV9C4D"
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -499,6 +531,7 @@ auth.onAuthStateChanged(user => {
   document.getElementById('signedOutNotice').style.display = user ? 'none' : 'block';
   document.getElementById('workoutApp').style.display = user ? 'block' : 'none';
   if (user && typeof loadWorkouts === 'function') loadWorkouts();
+  if (user && typeof loadMuscleStats === 'function') loadMuscleStats();
 });
 renderAuthUI(null);
 </script>
@@ -652,6 +685,7 @@ renderAuthUI(null);
       state.draft = [emptyExercise()];
       renderBlocks();
       await loadWorkouts();
+      if (typeof loadMuscleStats === 'function') loadMuscleStats();
     } catch (err) {
       console.error('Save failed', err);
       els.saveMsg.textContent = 'Save failed — try again.';
@@ -664,6 +698,7 @@ renderAuthUI(null);
     try {
       await db.collection('users').doc(currentUser.uid).collection('workouts').doc(id).delete();
       await loadWorkouts();
+      if (typeof loadMuscleStats === 'function') loadMuscleStats();
     } catch (err) { console.error('Delete failed', err); }
   }
 
@@ -703,6 +738,179 @@ renderAuthUI(null);
       btn.addEventListener('click', () => deleteWorkout(btn.dataset.id));
     });
   }
+
+  // ---- Muscle heat map ----
+  // Each exercise contributes to one or more muscle groups, with a weight
+  // reflecting how much that lift trains it (primary mover = ~1.0).
+  const MUSCLE_CONTRIB = {
+    'back squat':                  [['quads', 1.0], ['glutes', 0.6]],
+    'front squat':                 [['quads', 1.0], ['glutes', 0.4]],
+    'box squat':                   [['quads', 0.9], ['glutes', 0.6]],
+    'deadlift':                    [['hamstrings', 1.0], ['glutes', 0.8], ['back', 0.5]],
+    'romanian deadlift':           [['hamstrings', 1.0], ['glutes', 0.5]],
+    'bulgarian split squat':       [['quads', 0.9], ['glutes', 0.6]],
+    'hip thrust':                  [['glutes', 1.0], ['hamstrings', 0.3]],
+    'good morning':                [['hamstrings', 0.9], ['back', 0.4]],
+    'barbell lunge':               [['quads', 0.8], ['glutes', 0.6]],
+    'dumbbell romanian deadlift':  [['hamstrings', 1.0], ['glutes', 0.5]],
+    'dumbbell lunge':              [['quads', 0.8], ['glutes', 0.6]],
+    'dumbbell step-up':            [['quads', 0.8], ['glutes', 0.5]],
+    'dumbbell bulgarian split squat': [['quads', 0.9], ['glutes', 0.6]],
+    'dumbbell hip thrust':         [['glutes', 1.0], ['hamstrings', 0.3]],
+    'dumbbell calf raise':         [['calves', 1.0]],
+    'goblet squat':                [['quads', 0.9], ['glutes', 0.5]],
+    'bench press':                 [['chest', 1.0], ['triceps', 0.5], ['shoulders', 0.3]],
+    'incline bench press':         [['chest', 1.0], ['shoulders', 0.4], ['triceps', 0.4]],
+    'close-grip bench press':      [['triceps', 1.0], ['chest', 0.5]],
+    'push press':                  [['shoulders', 1.0], ['triceps', 0.5]],
+    'overhead press':              [['shoulders', 1.0], ['triceps', 0.4]],
+    'bent-over row':                [['back', 1.0], ['biceps', 0.4]],
+    'barbell curl':                [['biceps', 1.0]],
+    'skull crusher':               [['triceps', 1.0]],
+    'upright row':                 [['shoulders', 0.8], ['back', 0.3]],
+    'dumbbell bench press':        [['chest', 1.0], ['triceps', 0.4], ['shoulders', 0.3]],
+    'dumbbell incline press':      [['chest', 1.0], ['shoulders', 0.4]],
+    'dumbbell shoulder press':     [['shoulders', 1.0], ['triceps', 0.3]],
+    'dumbbell row':                [['back', 1.0], ['biceps', 0.4]],
+    'dumbbell curl':               [['biceps', 1.0]],
+    'dumbbell lateral raise':      [['shoulders', 1.0]],
+    'dumbbell tricep extension':   [['triceps', 1.0]],
+    'dumbbell fly':                [['chest', 1.0]]
+  };
+
+  const MUSCLE_LABELS = {
+    chest: 'Chest', shoulders: 'Shoulders', biceps: 'Biceps', triceps: 'Triceps',
+    back: 'Back', quads: 'Quads', hamstrings: 'Hamstrings', glutes: 'Glutes', calves: 'Calves'
+  };
+
+  const state_muscle = { view: 'front', volumes: {} };
+
+  function hexToRgb(hex){
+    const v = hex.replace('#','');
+    return [parseInt(v.slice(0,2),16), parseInt(v.slice(2,4),16), parseInt(v.slice(4,6),16)];
+  }
+  function rgbToHex(rgb){
+    return '#' + rgb.map(c => Math.round(c).toString(16).padStart(2,'0')).join('');
+  }
+  function heatColor(t){
+    // 0 -> base neutral, 0.5 -> blue, 1 -> red
+    t = Math.max(0, Math.min(1, t));
+    const base = hexToRgb('#2a2b33'), blue = hexToRgb('#2D6FE0'), red = hexToRgb('#c8393a');
+    let a, b, localT;
+    if (t < 0.5){ a = base; b = blue; localT = t / 0.5; }
+    else { a = blue; b = red; localT = (t - 0.5) / 0.5; }
+    const mixed = a.map((c, i) => c + (b[i] - c) * localT);
+    return rgbToHex(mixed);
+  }
+
+  const BASE_PARTS = `
+    <circle cx="150" cy="40" r="26" fill="#23242e"/>
+    <rect x="138" y="64" width="24" height="14" rx="4" fill="#23242e"/>
+    <rect x="98" y="78" width="104" height="150" rx="24" fill="#23242e"/>
+    <rect x="64" y="85" width="34" height="95" rx="17" fill="#23242e"/>
+    <rect x="202" y="85" width="34" height="95" rx="17" fill="#23242e"/>
+    <rect x="60" y="178" width="30" height="85" rx="15" fill="#23242e"/>
+    <rect x="210" y="178" width="30" height="85" rx="15" fill="#23242e"/>
+    <circle cx="75" cy="272" r="16" fill="#23242e"/>
+    <circle cx="225" cy="272" r="16" fill="#23242e"/>
+    <rect x="104" y="224" width="44" height="130" rx="20" fill="#23242e"/>
+    <rect x="152" y="224" width="44" height="130" rx="20" fill="#23242e"/>
+    <rect x="108" y="352" width="36" height="120" rx="16" fill="#23242e"/>
+    <rect x="156" y="352" width="36" height="120" rx="16" fill="#23242e"/>
+    <ellipse cx="126" cy="486" rx="22" ry="12" fill="#23242e"/>
+    <ellipse cx="174" cy="486" rx="22" ry="12" fill="#23242e"/>
+  `;
+
+  function regionsForView(view){
+    if (view === 'front'){
+      return [
+        { muscle: 'shoulders', d: 'rect', x:66, y:82, w:30, h:26, rx:12 },
+        { muscle: 'shoulders', d: 'rect', x:204, y:82, w:30, h:26, rx:12 },
+        { muscle: 'chest',     d: 'rect', x:108, y:90, w:84, h:44, rx:14 },
+        { muscle: 'biceps',    d: 'rect', x:66, y:112, w:28, h:62, rx:13 },
+        { muscle: 'biceps',    d: 'rect', x:206, y:112, w:28, h:62, rx:13 },
+        { muscle: 'quads',     d: 'rect', x:107, y:232, w:38, h:110, rx:16 },
+        { muscle: 'quads',     d: 'rect', x:155, y:232, w:38, h:110, rx:16 },
+        { muscle: 'calves',    d: 'rect', x:110, y:360, w:30, h:98, rx:14 },
+        { muscle: 'calves',    d: 'rect', x:160, y:360, w:30, h:98, rx:14 }
+      ];
+    }
+    return [
+      { muscle: 'shoulders',  d: 'rect', x:66, y:82, w:30, h:26, rx:12 },
+      { muscle: 'shoulders',  d: 'rect', x:204, y:82, w:30, h:26, rx:12 },
+      { muscle: 'back',       d: 'rect', x:104, y:88, w:92, h:90, rx:18 },
+      { muscle: 'triceps',    d: 'rect', x:66, y:112, w:28, h:62, rx:13 },
+      { muscle: 'triceps',    d: 'rect', x:206, y:112, w:28, h:62, rx:13 },
+      { muscle: 'glutes',     d: 'rect', x:104, y:222, w:92, h:44, rx:20 },
+      { muscle: 'hamstrings', d: 'rect', x:107, y:270, w:38, h:72, rx:16 },
+      { muscle: 'hamstrings', d: 'rect', x:155, y:270, w:38, h:72, rx:16 },
+      { muscle: 'calves',     d: 'rect', x:110, y:360, w:30, h:98, rx:14 },
+      { muscle: 'calves',     d: 'rect', x:160, y:360, w:30, h:98, rx:14 }
+    ];
+  }
+
+  function renderMuscleFigure(){
+    const svg = document.getElementById('muscleFigure');
+    const volumes = state_muscle.volumes;
+    const maxVol = Math.max(0.0001, ...Object.values(volumes));
+    const regions = regionsForView(state_muscle.view);
+
+    const overlaySvg = regions.map(r => {
+      const vol = volumes[r.muscle] || 0;
+      const intensity = vol / maxVol;
+      const color = heatColor(intensity);
+      return `<rect class="muscle-region" data-muscle="${r.muscle}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="${r.rx}" fill="${color}"/>`;
+    }).join('');
+
+    svg.innerHTML = BASE_PARTS + overlaySvg;
+
+    const tooltip = document.getElementById('muscleTooltip');
+    svg.querySelectorAll('.muscle-region').forEach(el => {
+      const showTip = () => {
+        const m = el.dataset.muscle;
+        const vol = Math.round((volumes[m] || 0) * 10) / 10;
+        tooltip.innerHTML = `${MUSCLE_LABELS[m]}<div class="val">${vol} sets logged</div>`;
+        tooltip.style.display = 'block';
+      };
+      el.addEventListener('mouseenter', showTip);
+      el.addEventListener('click', showTip);
+      el.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+    });
+  }
+
+  document.getElementById('muscleViewSeg').addEventListener('click', e => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    state_muscle.view = btn.dataset.val;
+    document.getElementById('muscleViewSeg').querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('muscleTooltip').style.display = 'none';
+    renderMuscleFigure();
+  });
+
+  async function loadMuscleStats(){
+    if (!currentUser) return;
+    let workouts = [];
+    try {
+      const snap = await db.collection('users').doc(currentUser.uid).collection('workouts').get();
+      workouts = snap.docs.map(d => d.data());
+    } catch (err) { console.error('Muscle stats load failed', err); }
+
+    const volumes = {};
+    workouts.forEach(w => {
+      (w.exercises || []).forEach(ex => {
+        const contrib = MUSCLE_CONTRIB[(ex.name || '').trim().toLowerCase()];
+        if (!contrib) return;
+        const setCount = (ex.sets || []).length;
+        contrib.forEach(([muscle, weight]) => {
+          volumes[muscle] = (volumes[muscle] || 0) + setCount * weight;
+        });
+      });
+    });
+    state_muscle.volumes = volumes;
+    renderMuscleFigure();
+  }
+
+  window.loadMuscleStats = loadMuscleStats;
+  renderMuscleFigure();
 
   window.loadWorkouts = loadWorkouts;
   renderBlocks();
