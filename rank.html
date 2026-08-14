@@ -456,20 +456,12 @@
 //      }
 // =====================================================================
 const firebaseConfig = {
- apiKey: "AIzaSyD7tmVGL4xYb5u6KGzmQ8Q7RPDgQRK05Ac",
-
-  authDomain: "progressive-overload-d767a.firebaseapp.com",
-
-  projectId: "progressive-overload-d767a",
-
-  storageBucket: "progressive-overload-d767a.firebasestorage.app",
-
-  messagingSenderId: "428054863511",
-
-  appId: "1:428054863511:web:b8dd0d5e2f8fcd43ad53d2",
-
-  measurementId: "G-GE0TYV9C4D"
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -532,9 +524,9 @@ renderAuthUI(null);
   // matches the brief, not a bug. Simplified, unisex, for-fun estimates.
   const LIFTS = {
     squat:    { label: 'Squat',          median: 0.35, k: 3.0, match: ['back squat', 'front squat', 'box squat'] },
-    bench:    { label: 'Bench Press',    median: 0.25, k: 3.5, match: ['bench press', 'incline bench press', 'close-grip bench press'] },
+    bench:    { label: 'Bench Press',    median: 0.25, k: 3.5, match: ['bench press', 'incline bench press', 'close-grip bench press', 'decline bench press'] },
     ohp:      { label: 'Overhead Press', median: 0.15, k: 4.5, match: ['overhead press', 'push press'] },
-    deadlift: { label: 'Deadlift',       median: 0.45, k: 2.5, match: ['deadlift'] }
+    deadlift: { label: 'Deadlift',       median: 0.45, k: 2.5, match: ['deadlift', 'stiff-leg deadlift'] }
   };
 
   function matchCategory(name){

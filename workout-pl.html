@@ -475,20 +475,12 @@
 //      }
 // =====================================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyD7tmVGL4xYb5u6KGzmQ8Q7RPDgQRK05Ac",
-
-  authDomain: "progressive-overload-d767a.firebaseapp.com",
-
-  projectId: "progressive-overload-d767a",
-
-  storageBucket: "progressive-overload-d767a.firebasestorage.app",
-
-  messagingSenderId: "428054863511",
-
-  appId: "1:428054863511:web:b8dd0d5e2f8fcd43ad53d2",
-
-  measurementId: "G-GE0TYV9C4D"
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -550,14 +542,83 @@ renderAuthUI(null);
   const state = { unit: 'kg', draft: [], history: [] };
 
   const EXERCISE_NAMES = [
-    'Back Squat', 'Front Squat', 'Deadlift', 'Romanian Deadlift', 'Bulgarian Split Squat',
-    'Hip Thrust', 'Good Morning', 'Barbell Lunge', 'Box Squat',
-    'Bench Press', 'Incline Bench Press', 'Overhead Press', 'Bent-Over Row',
-    'Close-Grip Bench Press', 'Push Press', 'Barbell Curl', 'Skull Crusher', 'Upright Row',
-    'Goblet Squat', 'Dumbbell Romanian Deadlift', 'Dumbbell Lunge', 'Dumbbell Step-Up',
-    'Dumbbell Bulgarian Split Squat', 'Dumbbell Hip Thrust', 'Dumbbell Calf Raise',
-    'Dumbbell Bench Press', 'Dumbbell Incline Press', 'Dumbbell Shoulder Press', 'Dumbbell Row',
-    'Dumbbell Curl', 'Dumbbell Lateral Raise', 'Dumbbell Tricep Extension', 'Dumbbell Fly'
+    'Bench Press',
+    'Incline Bench Press',
+    'Decline Bench Press',
+    'Close-Grip Bench Press',
+    'Dumbbell Bench Press',
+    'Dumbbell Incline Press',
+    'Dumbbell Fly',
+    'Cable Fly',
+    'Push-Up',
+    'Dips',
+    'Bent-Over Row',
+    'Pendlay Row',
+    'T-Bar Row',
+    'Dumbbell Row',
+    'Lat Pulldown',
+    'Pull-Up',
+    'Chin-Up',
+    'Seated Cable Row',
+    'Barbell Shrug',
+    'Dumbbell Shrug',
+    'Upright Row',
+    'Farmer\'s Carry',
+    'Overhead Press',
+    'Push Press',
+    'Dumbbell Shoulder Press',
+    'Arnold Press',
+    'Dumbbell Lateral Raise',
+    'Cable Lateral Raise',
+    'Front Raise',
+    'Rear Delt Fly',
+    'Face Pull',
+    'Barbell Curl',
+    'Dumbbell Curl',
+    'Hammer Curl',
+    'Preacher Curl',
+    'Cable Curl',
+    'Concentration Curl',
+    'Skull Crusher',
+    'Dumbbell Tricep Extension',
+    'Overhead Tricep Extension',
+    'Tricep Pushdown',
+    'Wrist Curl',
+    'Reverse Wrist Curl',
+    'Weighted Sit-Up',
+    'Plank',
+    'Hanging Leg Raise',
+    'Cable Crunch',
+    'Ab Wheel Rollout',
+    'Russian Twist',
+    'Back Squat',
+    'Front Squat',
+    'Box Squat',
+    'Bulgarian Split Squat',
+    'Barbell Lunge',
+    'Goblet Squat',
+    'Dumbbell Lunge',
+    'Dumbbell Step-Up',
+    'Dumbbell Bulgarian Split Squat',
+    'Leg Press',
+    'Leg Extension',
+    'Hack Squat',
+    'Deadlift',
+    'Romanian Deadlift',
+    'Stiff-Leg Deadlift',
+    'Good Morning',
+    'Dumbbell Romanian Deadlift',
+    'Leg Curl',
+    'Nordic Curl',
+    'Glute Ham Raise',
+    'Hip Thrust',
+    'Dumbbell Hip Thrust',
+    'Sumo Deadlift',
+    'Glute Bridge',
+    'Cable Kickback',
+    'Standing Calf Raise',
+    'Dumbbell Calf Raise',
+    'Seated Calf Raise'
   ];
 
   const els = {
@@ -753,44 +814,89 @@ renderAuthUI(null);
   // Each exercise contributes to one or more muscle groups, with a weight
   // reflecting how much that lift trains it (primary mover = ~1.0).
   const MUSCLE_CONTRIB = {
-    'back squat':                  [['quads', 1.0], ['glutes', 0.6]],
-    'front squat':                 [['quads', 1.0], ['glutes', 0.4]],
-    'box squat':                   [['quads', 0.9], ['glutes', 0.6]],
-    'deadlift':                    [['hamstrings', 1.0], ['glutes', 0.8], ['back', 0.5]],
-    'romanian deadlift':           [['hamstrings', 1.0], ['glutes', 0.5]],
-    'bulgarian split squat':       [['quads', 0.9], ['glutes', 0.6]],
-    'hip thrust':                  [['glutes', 1.0], ['hamstrings', 0.3]],
-    'good morning':                [['hamstrings', 0.9], ['back', 0.4]],
-    'barbell lunge':               [['quads', 0.8], ['glutes', 0.6]],
-    'dumbbell romanian deadlift':  [['hamstrings', 1.0], ['glutes', 0.5]],
-    'dumbbell lunge':              [['quads', 0.8], ['glutes', 0.6]],
-    'dumbbell step-up':            [['quads', 0.8], ['glutes', 0.5]],
+    'bench press': [['chest', 1.0], ['triceps', 0.5], ['shoulders', 0.3]],
+    'incline bench press': [['chest', 1.0], ['shoulders', 0.4], ['triceps', 0.4]],
+    'decline bench press': [['chest', 1.0], ['triceps', 0.5]],
+    'close-grip bench press': [['triceps', 1.0], ['chest', 0.5]],
+    'dumbbell bench press': [['chest', 1.0], ['triceps', 0.4], ['shoulders', 0.3]],
+    'dumbbell incline press': [['chest', 1.0], ['shoulders', 0.4]],
+    'dumbbell fly': [['chest', 1.0]],
+    'cable fly': [['chest', 1.0]],
+    'push-up': [['chest', 0.9], ['triceps', 0.4], ['shoulders', 0.2]],
+    'dips': [['chest', 0.7], ['triceps', 0.9], ['shoulders', 0.2]],
+    'bent-over row': [['back', 1.0], ['biceps', 0.4]],
+    'pendlay row': [['back', 1.0], ['biceps', 0.3]],
+    't-bar row': [['back', 1.0], ['biceps', 0.4]],
+    'dumbbell row': [['back', 1.0], ['biceps', 0.4]],
+    'lat pulldown': [['back', 1.0], ['biceps', 0.4]],
+    'pull-up': [['back', 1.0], ['biceps', 0.5]],
+    'chin-up': [['back', 0.8], ['biceps', 0.7]],
+    'seated cable row': [['back', 1.0], ['biceps', 0.3]],
+    'barbell shrug': [['traps', 1.0]],
+    'dumbbell shrug': [['traps', 1.0]],
+    'upright row': [['shoulders', 0.6], ['traps', 0.6]],
+    'farmer\'s carry': [['traps', 0.6], ['forearms', 0.8]],
+    'overhead press': [['shoulders', 1.0], ['triceps', 0.4]],
+    'push press': [['shoulders', 1.0], ['triceps', 0.5]],
+    'dumbbell shoulder press': [['shoulders', 1.0], ['triceps', 0.3]],
+    'arnold press': [['shoulders', 1.0], ['triceps', 0.3]],
+    'dumbbell lateral raise': [['shoulders', 1.0]],
+    'cable lateral raise': [['shoulders', 1.0]],
+    'front raise': [['shoulders', 1.0]],
+    'rear delt fly': [['shoulders', 0.9], ['back', 0.2]],
+    'face pull': [['shoulders', 0.6], ['traps', 0.4], ['back', 0.2]],
+    'barbell curl': [['biceps', 1.0]],
+    'dumbbell curl': [['biceps', 1.0]],
+    'hammer curl': [['biceps', 0.9], ['forearms', 0.4]],
+    'preacher curl': [['biceps', 1.0]],
+    'cable curl': [['biceps', 1.0]],
+    'concentration curl': [['biceps', 1.0]],
+    'skull crusher': [['triceps', 1.0]],
+    'dumbbell tricep extension': [['triceps', 1.0]],
+    'overhead tricep extension': [['triceps', 1.0]],
+    'tricep pushdown': [['triceps', 1.0]],
+    'wrist curl': [['forearms', 1.0]],
+    'reverse wrist curl': [['forearms', 1.0]],
+    'weighted sit-up': [['abs', 1.0]],
+    'plank': [['abs', 1.0]],
+    'hanging leg raise': [['abs', 1.0]],
+    'cable crunch': [['abs', 1.0]],
+    'ab wheel rollout': [['abs', 1.0]],
+    'russian twist': [['abs', 0.9]],
+    'back squat': [['quads', 1.0], ['glutes', 0.6]],
+    'front squat': [['quads', 1.0], ['glutes', 0.4]],
+    'box squat': [['quads', 0.9], ['glutes', 0.6]],
+    'bulgarian split squat': [['quads', 0.9], ['glutes', 0.6]],
+    'barbell lunge': [['quads', 0.8], ['glutes', 0.6]],
+    'goblet squat': [['quads', 0.9], ['glutes', 0.5]],
+    'dumbbell lunge': [['quads', 0.8], ['glutes', 0.6]],
+    'dumbbell step-up': [['quads', 0.8], ['glutes', 0.5]],
     'dumbbell bulgarian split squat': [['quads', 0.9], ['glutes', 0.6]],
-    'dumbbell hip thrust':         [['glutes', 1.0], ['hamstrings', 0.3]],
-    'dumbbell calf raise':         [['calves', 1.0]],
-    'goblet squat':                [['quads', 0.9], ['glutes', 0.5]],
-    'bench press':                 [['chest', 1.0], ['triceps', 0.5], ['shoulders', 0.3]],
-    'incline bench press':         [['chest', 1.0], ['shoulders', 0.4], ['triceps', 0.4]],
-    'close-grip bench press':      [['triceps', 1.0], ['chest', 0.5]],
-    'push press':                  [['shoulders', 1.0], ['triceps', 0.5]],
-    'overhead press':              [['shoulders', 1.0], ['triceps', 0.4]],
-    'bent-over row':                [['back', 1.0], ['biceps', 0.4]],
-    'barbell curl':                [['biceps', 1.0]],
-    'skull crusher':               [['triceps', 1.0]],
-    'upright row':                 [['shoulders', 0.8], ['back', 0.3]],
-    'dumbbell bench press':        [['chest', 1.0], ['triceps', 0.4], ['shoulders', 0.3]],
-    'dumbbell incline press':      [['chest', 1.0], ['shoulders', 0.4]],
-    'dumbbell shoulder press':     [['shoulders', 1.0], ['triceps', 0.3]],
-    'dumbbell row':                [['back', 1.0], ['biceps', 0.4]],
-    'dumbbell curl':               [['biceps', 1.0]],
-    'dumbbell lateral raise':      [['shoulders', 1.0]],
-    'dumbbell tricep extension':   [['triceps', 1.0]],
-    'dumbbell fly':                [['chest', 1.0]]
+    'leg press': [['quads', 1.0], ['glutes', 0.4]],
+    'leg extension': [['quads', 1.0]],
+    'hack squat': [['quads', 1.0], ['glutes', 0.3]],
+    'deadlift': [['hamstrings', 1.0], ['glutes', 0.8], ['back', 0.5]],
+    'romanian deadlift': [['hamstrings', 1.0], ['glutes', 0.5]],
+    'stiff-leg deadlift': [['hamstrings', 1.0], ['glutes', 0.4], ['back', 0.3]],
+    'good morning': [['hamstrings', 0.9], ['back', 0.4]],
+    'dumbbell romanian deadlift': [['hamstrings', 1.0], ['glutes', 0.5]],
+    'leg curl': [['hamstrings', 1.0]],
+    'nordic curl': [['hamstrings', 1.0]],
+    'glute ham raise': [['hamstrings', 0.9], ['glutes', 0.4]],
+    'hip thrust': [['glutes', 1.0], ['hamstrings', 0.3]],
+    'dumbbell hip thrust': [['glutes', 1.0], ['hamstrings', 0.3]],
+    'sumo deadlift': [['glutes', 0.7], ['hamstrings', 0.7], ['quads', 0.4], ['back', 0.3]],
+    'glute bridge': [['glutes', 1.0]],
+    'cable kickback': [['glutes', 1.0]],
+    'standing calf raise': [['calves', 1.0]],
+    'dumbbell calf raise': [['calves', 1.0]],
+    'seated calf raise': [['calves', 1.0]]
   };
 
   const MUSCLE_LABELS = {
-    chest: 'Klatka piersiowa', shoulders: 'Barki', biceps: 'Biceps', triceps: 'Triceps',
-    back: 'Plecy', quads: 'Czworogłowe', hamstrings: 'Dwugłowe uda', glutes: 'Pośladki', calves: 'Łydki'
+    chest: 'Klatka piersiowa', back: 'Plecy', traps: 'Czworoboczne', shoulders: 'Barki',
+    biceps: 'Biceps', triceps: 'Triceps', forearms: 'Przedramiona', abs: 'Brzuch',
+    quads: 'Czworogłowe', hamstrings: 'Dwugłowe uda', glutes: 'Pośladki', calves: 'Łydki'
   };
 
   const state_muscle = { view: 'front', volumes: {} };
@@ -817,12 +923,12 @@ renderAuthUI(null);
     <circle cx="150" cy="40" r="26" fill="#23242e"/>
     <rect x="138" y="64" width="24" height="14" rx="4" fill="#23242e"/>
     <rect x="98" y="78" width="104" height="150" rx="24" fill="#23242e"/>
-    <rect x="48" y="85" width="34" height="95" rx="17" fill="#23242e"/>
-    <rect x="218" y="85" width="34" height="95" rx="17" fill="#23242e"/>
-    <rect x="44" y="178" width="30" height="85" rx="15" fill="#23242e"/>
-    <rect x="226" y="178" width="30" height="85" rx="15" fill="#23242e"/>
-    <circle cx="59" cy="272" r="16" fill="#23242e"/>
-    <circle cx="241" cy="272" r="16" fill="#23242e"/>
+    <rect x="64" y="85" width="34" height="95" rx="17" fill="#23242e"/>
+    <rect x="202" y="85" width="34" height="95" rx="17" fill="#23242e"/>
+    <rect x="60" y="178" width="30" height="85" rx="15" fill="#23242e"/>
+    <rect x="210" y="178" width="30" height="85" rx="15" fill="#23242e"/>
+    <circle cx="75" cy="272" r="16" fill="#23242e"/>
+    <circle cx="225" cy="272" r="16" fill="#23242e"/>
     <rect x="104" y="224" width="44" height="130" rx="20" fill="#23242e"/>
     <rect x="152" y="224" width="44" height="130" rx="20" fill="#23242e"/>
     <rect x="108" y="352" width="36" height="120" rx="16" fill="#23242e"/>
@@ -834,11 +940,14 @@ renderAuthUI(null);
   function regionsForView(view){
     if (view === 'front'){
       return [
-        { muscle: 'shoulders', d: 'rect', x:50, y:82, w:30, h:26, rx:12 },
-        { muscle: 'shoulders', d: 'rect', x:220, y:82, w:30, h:26, rx:12 },
+        { muscle: 'shoulders', d: 'rect', x:66, y:82, w:30, h:26, rx:12 },
+        { muscle: 'shoulders', d: 'rect', x:204, y:82, w:30, h:26, rx:12 },
         { muscle: 'chest',     d: 'rect', x:108, y:90, w:84, h:44, rx:14 },
-        { muscle: 'biceps',    d: 'rect', x:50, y:112, w:28, h:62, rx:13 },
-        { muscle: 'biceps',    d: 'rect', x:222, y:112, w:28, h:62, rx:13 },
+        { muscle: 'abs',       d: 'rect', x:112, y:140, w:76, h:80, rx:14 },
+        { muscle: 'biceps',    d: 'rect', x:66, y:112, w:28, h:62, rx:13 },
+        { muscle: 'biceps',    d: 'rect', x:206, y:112, w:28, h:62, rx:13 },
+        { muscle: 'forearms',  d: 'rect', x:60, y:178, w:30, h:85, rx:15 },
+        { muscle: 'forearms',  d: 'rect', x:210, y:178, w:30, h:85, rx:15 },
         { muscle: 'quads',     d: 'rect', x:107, y:232, w:38, h:110, rx:16 },
         { muscle: 'quads',     d: 'rect', x:155, y:232, w:38, h:110, rx:16 },
         { muscle: 'calves',    d: 'rect', x:110, y:360, w:30, h:98, rx:14 },
@@ -846,11 +955,14 @@ renderAuthUI(null);
       ];
     }
     return [
-      { muscle: 'shoulders',  d: 'rect', x:50, y:82, w:30, h:26, rx:12 },
-      { muscle: 'shoulders',  d: 'rect', x:220, y:82, w:30, h:26, rx:12 },
-      { muscle: 'back',       d: 'rect', x:104, y:88, w:92, h:90, rx:18 },
-      { muscle: 'triceps',    d: 'rect', x:50, y:112, w:28, h:62, rx:13 },
-      { muscle: 'triceps',    d: 'rect', x:222, y:112, w:28, h:62, rx:13 },
+      { muscle: 'shoulders',  d: 'rect', x:66, y:82, w:30, h:26, rx:12 },
+      { muscle: 'shoulders',  d: 'rect', x:204, y:82, w:30, h:26, rx:12 },
+      { muscle: 'traps',      d: 'rect', x:112, y:78, w:76, h:24, rx:12 },
+      { muscle: 'back',       d: 'rect', x:104, y:104, w:92, h:74, rx:18 },
+      { muscle: 'triceps',    d: 'rect', x:66, y:112, w:28, h:62, rx:13 },
+      { muscle: 'triceps',    d: 'rect', x:206, y:112, w:28, h:62, rx:13 },
+      { muscle: 'forearms',   d: 'rect', x:60, y:178, w:30, h:85, rx:15 },
+      { muscle: 'forearms',   d: 'rect', x:210, y:178, w:30, h:85, rx:15 },
       { muscle: 'glutes',     d: 'rect', x:104, y:222, w:92, h:44, rx:20 },
       { muscle: 'hamstrings', d: 'rect', x:107, y:270, w:38, h:72, rx:16 },
       { muscle: 'hamstrings', d: 'rect', x:155, y:270, w:38, h:72, rx:16 },
