@@ -435,20 +435,12 @@
 //      }
 // =====================================================================
 const firebaseConfig = {
- apiKey: "AIzaSyD7tmVGL4xYb5u6KGzmQ8Q7RPDgQRK05Ac",
-
-  authDomain: "progressive-overload-d767a.firebaseapp.com",
-
-  projectId: "progressive-overload-d767a",
-
-  storageBucket: "progressive-overload-d767a.firebasestorage.app",
-
-  messagingSenderId: "428054863511",
-
-  appId: "1:428054863511:web:b8dd0d5e2f8fcd43ad53d2",
-
-  measurementId: "G-GE0TYV9C4D"
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -578,45 +570,64 @@ renderAuthUI(null);
       lower: [
         { name: 'Przysiad ze sztangą', type: 'compound' },
         { name: 'Przysiad przedni', type: 'compound' },
+        { name: 'Przysiad na skrzyni', type: 'compound' },
+        { name: 'Przysiad bułgarski', type: 'compound' },
+        { name: 'Wykrok ze sztangą', type: 'compound' },
         { name: 'Martwy ciąg', type: 'compound' },
         { name: 'Rumuński martwy ciąg', type: 'compound' },
-        { name: 'Przysiad bułgarski', type: 'compound' },
-        { name: 'Hip thrust ze sztangą', type: 'compound' },
+        { name: 'Martwy ciąg na prostych nogach', type: 'compound' },
         { name: 'Good morning', type: 'compound' },
-        { name: 'Wykrok ze sztangą', type: 'compound' },
-        { name: 'Przysiad na skrzyni', type: 'compound' }
+        { name: 'Hip thrust ze sztangą', type: 'compound' },
+        { name: 'Martwy ciąg sumo', type: 'compound' },
+        { name: 'Wspięcia na palce ze sztangą', type: 'isolation' }
       ],
       upper: [
         { name: 'Wyciskanie sztangi na ławce', type: 'compound' },
         { name: 'Wyciskanie na ławce skos dodatni', type: 'compound' },
-        { name: 'Wyciskanie żołnierskie', type: 'compound' },
-        { name: 'Wiosłowanie sztangą w opadzie', type: 'compound' },
+        { name: 'Wyciskanie na ławce skos ujemny', type: 'compound' },
         { name: 'Wyciskanie wąskim chwytem', type: 'compound' },
+        { name: 'Wiosłowanie sztangą w opadzie', type: 'compound' },
+        { name: 'Wiosłowanie Pendlay', type: 'compound' },
+        { name: 'Wiosłowanie T-bar', type: 'compound' },
+        { name: 'Wznosy barków ze sztangą', type: 'isolation' },
+        { name: 'Wiosłowanie sztangą wzniosy', type: 'isolation' },
+        { name: 'Wyciskanie żołnierskie', type: 'compound' },
         { name: 'Push press', type: 'compound' },
         { name: 'Uginanie ramion ze sztangą', type: 'isolation' },
+        { name: 'Uginanie na modlitewniku', type: 'isolation' },
         { name: 'Francuskie wyciskanie', type: 'isolation' },
-        { name: 'Wiosłowanie sztangą wzniosy', type: 'isolation' }
+        { name: 'Uginanie nadgarstków', type: 'isolation' },
+        { name: 'Prostowanie nadgarstków', type: 'isolation' }
       ]
     },
     dumbbell: {
       lower: [
         { name: 'Przysiad z hantlą (goblet)', type: 'compound' },
-        { name: 'Rumuński martwy ciąg z hantlami', type: 'compound' },
         { name: 'Wykrok z hantlami', type: 'compound' },
         { name: 'Step-up z hantlami', type: 'compound' },
         { name: 'Przysiad bułgarski z hantlami', type: 'compound' },
+        { name: 'Rumuński martwy ciąg z hantlami', type: 'compound' },
         { name: 'Hip thrust z hantlą', type: 'compound' },
         { name: 'Wspięcia na palce z hantlami', type: 'isolation' }
       ],
       upper: [
         { name: 'Wyciskanie hantli na ławce', type: 'compound' },
         { name: 'Wyciskanie hantli skos dodatni', type: 'compound' },
-        { name: 'Wyciskanie hantli nad głowę', type: 'compound' },
+        { name: 'Rozpiętki z hantlami', type: 'isolation' },
         { name: 'Wiosłowanie hantlą', type: 'compound' },
-        { name: 'Uginanie ramion z hantlami', type: 'isolation' },
+        { name: 'Wznosy barków z hantlami', type: 'isolation' },
+        { name: 'Marsz farmera', type: 'compound' },
+        { name: 'Wyciskanie hantli nad głowę', type: 'compound' },
+        { name: 'Wyciskanie Arnolda', type: 'compound' },
         { name: 'Unoszenie hantli bokiem', type: 'isolation' },
+        { name: 'Unoszenie hantli przodem', type: 'isolation' },
+        { name: 'Rozpiętki tylne', type: 'isolation' },
+        { name: 'Uginanie ramion z hantlami', type: 'isolation' },
+        { name: 'Uginanie młotkowe', type: 'isolation' },
+        { name: 'Uginanie skoncentrowane', type: 'isolation' },
         { name: 'Prostowanie ramion z hantlą', type: 'isolation' },
-        { name: 'Rozpiętki z hantlami', type: 'isolation' }
+        { name: 'Prostowanie ramion nad głową', type: 'isolation' },
+        { name: 'Brzuszki z obciążeniem', type: 'isolation' }
       ]
     }
   };
@@ -846,7 +857,9 @@ renderAuthUI(null);
   }
 
   function openExerciseDropdown(){
-    renderExerciseDropdown(els.exercise.value);
+    // Show the full list on open (clicking/focusing) — only narrow it once
+    // the person actually types, so a prefilled value doesn't hide options.
+    renderExerciseDropdown('');
     els.exerciseDropdown.classList.add('open');
   }
   function closeExerciseDropdown(){
