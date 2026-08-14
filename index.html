@@ -436,20 +436,12 @@
 //      }
 // =====================================================================
 const firebaseConfig = {
-apiKey: "AIzaSyD7tmVGL4xYb5u6KGzmQ8Q7RPDgQRK05Ac",
-
-  authDomain: "progressive-overload-d767a.firebaseapp.com",
-
-  projectId: "progressive-overload-d767a",
-
-  storageBucket: "progressive-overload-d767a.firebasestorage.app",
-
-  messagingSenderId: "428054863511",
-
-  appId: "1:428054863511:web:b8dd0d5e2f8fcd43ad53d2",
-
-  measurementId: "G-GE0TYV9C4D"
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -577,45 +569,64 @@ renderAuthUI(null);
       lower: [
         { name: 'Back Squat', type: 'compound' },
         { name: 'Front Squat', type: 'compound' },
+        { name: 'Box Squat', type: 'compound' },
+        { name: 'Bulgarian Split Squat', type: 'compound' },
+        { name: 'Barbell Lunge', type: 'compound' },
         { name: 'Deadlift', type: 'compound' },
         { name: 'Romanian Deadlift', type: 'compound' },
-        { name: 'Bulgarian Split Squat', type: 'compound' },
-        { name: 'Hip Thrust', type: 'compound' },
+        { name: 'Stiff-Leg Deadlift', type: 'compound' },
         { name: 'Good Morning', type: 'compound' },
-        { name: 'Barbell Lunge', type: 'compound' },
-        { name: 'Box Squat', type: 'compound' }
+        { name: 'Hip Thrust', type: 'compound' },
+        { name: 'Sumo Deadlift', type: 'compound' },
+        { name: 'Standing Calf Raise', type: 'isolation' }
       ],
       upper: [
         { name: 'Bench Press', type: 'compound' },
         { name: 'Incline Bench Press', type: 'compound' },
-        { name: 'Overhead Press', type: 'compound' },
-        { name: 'Bent-Over Row', type: 'compound' },
+        { name: 'Decline Bench Press', type: 'compound' },
         { name: 'Close-Grip Bench Press', type: 'compound' },
+        { name: 'Bent-Over Row', type: 'compound' },
+        { name: 'Pendlay Row', type: 'compound' },
+        { name: 'T-Bar Row', type: 'compound' },
+        { name: 'Barbell Shrug', type: 'isolation' },
+        { name: 'Upright Row', type: 'isolation' },
+        { name: 'Overhead Press', type: 'compound' },
         { name: 'Push Press', type: 'compound' },
         { name: 'Barbell Curl', type: 'isolation' },
+        { name: 'Preacher Curl', type: 'isolation' },
         { name: 'Skull Crusher', type: 'isolation' },
-        { name: 'Upright Row', type: 'isolation' }
+        { name: 'Wrist Curl', type: 'isolation' },
+        { name: 'Reverse Wrist Curl', type: 'isolation' }
       ]
     },
     dumbbell: {
       lower: [
         { name: 'Goblet Squat', type: 'compound' },
-        { name: 'Dumbbell Romanian Deadlift', type: 'compound' },
         { name: 'Dumbbell Lunge', type: 'compound' },
         { name: 'Dumbbell Step-Up', type: 'compound' },
         { name: 'Dumbbell Bulgarian Split Squat', type: 'compound' },
+        { name: 'Dumbbell Romanian Deadlift', type: 'compound' },
         { name: 'Dumbbell Hip Thrust', type: 'compound' },
         { name: 'Dumbbell Calf Raise', type: 'isolation' }
       ],
       upper: [
         { name: 'Dumbbell Bench Press', type: 'compound' },
         { name: 'Dumbbell Incline Press', type: 'compound' },
-        { name: 'Dumbbell Shoulder Press', type: 'compound' },
+        { name: 'Dumbbell Fly', type: 'isolation' },
         { name: 'Dumbbell Row', type: 'compound' },
-        { name: 'Dumbbell Curl', type: 'isolation' },
+        { name: 'Dumbbell Shrug', type: 'isolation' },
+        { name: 'Farmer\'s Carry', type: 'compound' },
+        { name: 'Dumbbell Shoulder Press', type: 'compound' },
+        { name: 'Arnold Press', type: 'compound' },
         { name: 'Dumbbell Lateral Raise', type: 'isolation' },
+        { name: 'Front Raise', type: 'isolation' },
+        { name: 'Rear Delt Fly', type: 'isolation' },
+        { name: 'Dumbbell Curl', type: 'isolation' },
+        { name: 'Hammer Curl', type: 'isolation' },
+        { name: 'Concentration Curl', type: 'isolation' },
         { name: 'Dumbbell Tricep Extension', type: 'isolation' },
-        { name: 'Dumbbell Fly', type: 'isolation' }
+        { name: 'Overhead Tricep Extension', type: 'isolation' },
+        { name: 'Weighted Sit-Up', type: 'isolation' }
       ]
     }
   };
@@ -845,7 +856,9 @@ renderAuthUI(null);
   }
 
   function openExerciseDropdown(){
-    renderExerciseDropdown(els.exercise.value);
+    // Show the full list on open (clicking/focusing) — only narrow it once
+    // the person actually types, so a prefilled value doesn't hide options.
+    renderExerciseDropdown('');
     els.exerciseDropdown.classList.add('open');
   }
   function closeExerciseDropdown(){
